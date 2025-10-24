@@ -185,25 +185,23 @@ def add_months(date_obj, n_months):
     last_day = calendar.monthrange(year, month)[1]
     return datetime(year, month, min(day, last_day))
 
-def payment_date_10th(start_date, offset_months, is_quarterly=False):
+def payment_date_10th(start_date, offset_months):
     """Return the payment date for offset_months (0-based). Each payment is on AD day=10."""
-    months_to_add = offset_months * 3 if is_quarterly else offset_months
-    
     if start_date.day <= 10:
         first_payment_base = start_date.replace(day=10)
     else:
         first_payment_base = add_months(start_date.replace(day=1), 1).replace(day=10)
     
-    pd_date = add_months(first_payment_base, months_to_add)
+    pd_date = add_months(first_payment_base, offset_months)
     last_day = calendar.monthrange(pd_date.year, pd_date.month)[1]
     d = min(10, last_day)
     return datetime(pd_date.year, pd_date.month, d)
 
-def count_payments_between(segment_start_date, segment_end_date, is_quarterly=False, max_check=5000):
+def count_payments_between(segment_start_date, segment_end_date, max_check=5000):
     """Count how many payment dates (10th) occur between segment_start_date and segment_end_date."""
     count = 0
     for off in range(max_check):
-        pd = payment_date_10th(segment_start_date, off, is_quarterly)
+        pd = payment_date_10th(segment_start_date, off)
         if pd < segment_end_date:
             count += 1
         else:
@@ -214,61 +212,46 @@ def count_payments_between(segment_start_date, segment_end_date, is_quarterly=Fa
 # EMI CALCULATION
 # ============================================================================
 
-def calculate_emi(principal, annual_rate, tenure_months, is_quarterly=False):
-    if is_quarterly:
-        quarterly_rate = annual_rate / (4 * 100)
-        tenure_quarters = int(np.ceil(tenure_months / 3))
-        if quarterly_rate == 0:
-            return principal / tenure_quarters
-        eqi = (principal * quarterly_rate * (1 + quarterly_rate)**tenure_quarters) / \
-              ((1 + quarterly_rate)**tenure_quarters - 1)
-        return eqi
-    else:
-        monthly_rate = annual_rate / (12 * 100)
-        if monthly_rate == 0:
-            return principal / tenure_months
-        emi = (principal * monthly_rate * (1 + monthly_rate)**tenure_months) / \
-              ((1 + monthly_rate)**tenure_months - 1)
-        return emi
+def calculate_emi(principal, annual_rate, tenure_months):
+    monthly_rate = annual_rate / (12 * 100)
+    if monthly_rate == 0:
+        return principal / tenure_months
+    emi = (principal * monthly_rate * (1 + monthly_rate)**tenure_months) / \
+          ((1 + monthly_rate)**tenure_months - 1)
+    return emi
 
-def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fixed_emi=None, start_month=1, max_payments=None, is_quarterly=False):
-    """Generate EMI schedule where payments occur on the AD 10th of each month/quarter."""
-    if is_quarterly:
-        rate_per_period = annual_rate / (4 * 100)
-        tenure_periods = int(np.ceil(tenure_months / 3))
-    else:
-        rate_per_period = annual_rate / (12 * 100)
-        tenure_periods = tenure_months
-    
+def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fixed_emi=None, start_month=1, max_payments=None):
+    """Generate EMI schedule where payments occur on the AD 10th of each month."""
+    monthly_rate = annual_rate / (12 * 100)
     if fixed_emi is not None:
-        if rate_per_period == 0:
+        if monthly_rate == 0:
             actual_tenure = int(np.ceil(principal / fixed_emi))
         else:
-            if fixed_emi <= principal * rate_per_period:
+            if fixed_emi <= principal * monthly_rate:
                 return None, None, None
             actual_tenure = int(np.ceil(
-                np.log(fixed_emi / (fixed_emi - principal * rate_per_period)) /
-                np.log(1 + rate_per_period)
+                np.log(fixed_emi / (fixed_emi - principal * monthly_rate)) /
+                np.log(1 + monthly_rate)
             ))
         emi = fixed_emi
         payments_to_make = actual_tenure if max_payments is None else min(actual_tenure, int(max_payments))
     else:
-        actual_tenure = tenure_periods
-        emi = calculate_emi(principal, annual_rate, tenure_months, is_quarterly)
+        actual_tenure = tenure_months
+        emi = calculate_emi(principal, annual_rate, tenure_months)
         payments_to_make = actual_tenure if max_payments is None else min(actual_tenure, int(max_payments))
 
     schedule = []
     balance = principal
 
     for m in range(payments_to_make):
-        payment_date = payment_date_10th(start_date, m, is_quarterly)
+        payment_date = payment_date_10th(start_date, m)
         try:
             bs_y, bs_m, bs_d = ad_to_bs(payment_date)
         except Exception:
             bs_y, bs_m, bs_d = None, None, None
 
         opening_balance = balance
-        interest = balance * rate_per_period
+        interest = balance * monthly_rate
         principal_paid = emi - interest
 
         is_theoretical_last_payment = (m == actual_tenure - 1)
@@ -280,10 +263,8 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
 
         closing_balance = balance - principal_paid
 
-        period_label = f"Q{start_month + m}" if is_quarterly else str(start_month + m)
-        
         schedule.append({
-            'Month': period_label,
+            'Month': start_month + m,
             'Payment Date (AD)': payment_date.strftime('%Y-%m-%d'),
             'Payment Date (BS)': format_bs_date(bs_y, bs_m, bs_d),
             'Opening Balance': round(opening_balance, 2),
@@ -300,10 +281,10 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
 
     return pd.DataFrame(schedule), emi, actual_tenure
 
-def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_date, rate_change_schedule, is_quarterly=False):
+def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_date, rate_change_schedule):
     """Apply multiple rate changes based on their AD dates."""
     rate_changes_sorted = sorted(rate_change_schedule, key=lambda x: x['date'])
-    initial_emi = calculate_emi(principal, initial_rate, tenure_months, is_quarterly)
+    initial_emi = calculate_emi(principal, initial_rate, tenure_months)
 
     current_date = start_date
     all_schedules = []
@@ -324,7 +305,7 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
         seg_rate = full_changes[i]['rate']
         if i < len(full_changes) - 1:
             seg_end = full_changes[i + 1]['date']
-            months_in_segment = count_payments_between(seg_start, seg_end, is_quarterly)
+            months_in_segment = count_payments_between(seg_start, seg_end)
         else:
             months_in_segment = None
 
@@ -339,21 +320,16 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
             seg_start,
             fixed_emi=initial_emi,
             start_month=current_month_index,
-            max_payments=months_in_segment,
-            is_quarterly=is_quarterly
+            max_payments=months_in_segment
         )
 
         if schedule is None:
-            period_type = "EQI" if is_quarterly else "EMI"
-            raise ValueError(f"Fixed {period_type} {initial_emi:.2f} is too small for the rate {seg_rate}% (interest >= {period_type}).")
+            raise ValueError(f"Fixed EMI {initial_emi:.2f} is too small for the rate {seg_rate}% (interest >= EMI).")
 
         if len(schedule) > 0:
             all_schedules.append(schedule)
             current_principal = schedule.iloc[-1]['Closing Balance']
-            if is_quarterly:
-                current_month_index = int(schedule.iloc[-1]['Month'][1:]) + 1
-            else:
-                current_month_index = int(schedule.iloc[-1]['Month']) + 1
+            current_month_index = schedule.iloc[-1]['Month'] + 1
 
         if months_in_segment is None:
             break
@@ -365,7 +341,7 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
         combined = pd.concat(all_schedules, ignore_index=True)
         return combined, initial_emi
 
-    return calculate_emi_schedule(principal, initial_rate, tenure_months, start_date, is_quarterly=is_quarterly)[:2]
+    return calculate_emi_schedule(principal, initial_rate, tenure_months, start_date)[:2]
 
 # ============================================================================
 # EXPORT FUNCTIONS
@@ -606,18 +582,16 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
 def create_balance_chart(schedule):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=schedule.index + 1,
+        x=schedule['Month'],
         y=schedule['Closing Balance'],
         mode='lines',
         fill='tozeroy',
         name='Outstanding Balance',
         line=dict(width=3),
-        text=schedule['Month'],
-        hovertemplate='Period: %{text}<br>Balance: Rs. %{y:,.0f}<extra></extra>'
     ))
     fig.update_layout(
         title='Loan Balance Over Time',
-        xaxis_title='Payment Period',
+        xaxis_title='Month',
         yaxis_title='Outstanding Balance (Rs.)',
         height=350,
         hovermode='x unified'
@@ -627,22 +601,18 @@ def create_balance_chart(schedule):
 def create_principal_interest_chart(schedule):
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=schedule.index + 1,
+        x=schedule['Month'],
         y=schedule['Principal'],
-        name='Principal',
-        text=schedule['Month'],
-        hovertemplate='Period: %{text}<br>Principal: Rs. %{y:,.0f}<extra></extra>'
+        name='Principal'
     ))
     fig.add_trace(go.Bar(
-        x=schedule.index + 1,
+        x=schedule['Month'],
         y=schedule['Interest'],
-        name='Interest',
-        text=schedule['Month'],
-        hovertemplate='Period: %{text}<br>Interest: Rs. %{y:,.0f}<extra></extra>'
+        name='Interest'
     ))
     fig.update_layout(
         title='EMI Breakdown: Principal vs Interest',
-        xaxis_title='Payment Period',
+        xaxis_title='Month',
         yaxis_title='Amount (Rs.)',
         barmode='stack',
         height=350,
@@ -666,17 +636,15 @@ def create_pie_chart(schedule):
 def create_interest_rate_timeline(schedule):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=schedule.index + 1,
+        x=schedule['Month'],
         y=schedule['Interest Rate (%)'],
         mode='lines+markers',
         name='Interest Rate',
-        line=dict(width=3, shape='hv'),
-        text=schedule['Month'],
-        hovertemplate='Period: %{text}<br>Rate: %{y:.2f}%<extra></extra>'
+        line=dict(width=3, shape='hv')  # Step line for rate changes
     ))
     fig.update_layout(
         title='Interest Rate Changes Over Time',
-        xaxis_title='Payment Period',
+        xaxis_title='Month',
         yaxis_title='Interest Rate (%)',
         height=350,
         hovermode='x unified'
@@ -696,15 +664,9 @@ def init_session_state():
 init_session_state()
 
 def main():
-    st.set_page_config(page_title="Dynamic EMI/EQI Calculator", page_icon="💰", layout="wide")
-    st.title("Dynamic EMI/EQI Calculator")
-    
-    # Payment frequency selector at the top
-    payment_freq = st.radio("Payment Frequency", ["EMI (Monthly)", "EQI (Quarterly)"], horizontal=True)
-    is_quarterly = (payment_freq == "EQI (Quarterly)")
-    
-    freq_text = "quarter" if is_quarterly else "month"
-    st.markdown(f"Payments are scheduled on the **10th** of each AD {freq_text} and remain equal over period")
+    st.set_page_config(page_title="Dynamic EMI Calculator", page_icon="💰", layout="wide")
+    st.title("Dynamic EMI Calculator")
+    st.markdown("Payments are scheduled on the **10th** of each AD month and remain equal over period")
     
     st.divider()
 
@@ -818,7 +780,7 @@ def main():
                         st.rerun()
 
         st.divider()
-        calculate_btn = st.button("📊 Calculate Schedule", type="primary", use_container_width=True)
+        calculate_btn = st.button("📊 Calculate EMI", type="primary", use_container_width=True)
         if st.session_state.rate_changes:
             if st.button("🔄 Reset Rate Changes", use_container_width=True):
                 st.session_state.rate_changes = []
@@ -833,19 +795,15 @@ def main():
                     annual_rate,
                     tenure_months,
                     start_datetime,
-                    st.session_state.rate_changes,
-                    is_quarterly
+                    st.session_state.rate_changes
                 )
             else:
-                schedule, emi = calculate_emi_schedule(principal, annual_rate, tenure_months, start_datetime, is_quarterly=is_quarterly)[:2]
+                schedule, emi = calculate_emi_schedule(principal, annual_rate, tenure_months, start_datetime)[:2]
 
             # Summary metrics
-            period_label = "Quarterly EQI" if is_quarterly else "Monthly EMI"
-            period_count = f"{len(schedule)} {'quarters' if is_quarterly else 'months'}"
-            
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric(period_label, f"Rs. {emi:,.2f}")
+                st.metric("Monthly EMI", f"Rs. {emi:,.2f}")
             with col2:
                 total_payment = schedule['EMI'].sum()
                 st.metric("Total Payment", f"Rs. {total_payment:,.2f}")
@@ -853,7 +811,7 @@ def main():
                 total_interest = schedule['Interest'].sum()
                 st.metric("Total Interest", f"Rs. {total_interest:,.2f}")
             with col4:
-                st.metric("Actual Tenure", period_count)
+                st.metric("Actual Tenure", f"{len(schedule)} months")
 
             st.divider()
             
@@ -899,17 +857,17 @@ def main():
                     # Excel Download
                     excel_buffer = io.BytesIO()
                     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                        schedule.to_excel(writer, sheet_name='Schedule', index=False)
+                        schedule.to_excel(writer, sheet_name='EMI Schedule', index=False)
                         
                         # Add summary sheet
                         summary_df = pd.DataFrame({
-                            'Parameter': ['Loan Amount', 'EMI/EQI', 'Total Payment', 'Total Interest', 'Loan Tenure', 'Initial Rate'],
+                            'Parameter': ['Loan Amount', 'Monthly EMI', 'Total Payment', 'Total Interest', 'Loan Tenure', 'Initial Rate'],
                             'Value': [
                                 f"Rs. {principal:,.2f}",
-                                f"Rs. {emi/eqi:,.2f}",
+                                f"Rs. {emi:,.2f}",
                                 f"Rs. {total_payment:,.2f}",
                                 f"Rs. {total_interest:,.2f}",
-                                period_count,
+                                f"{len(schedule)} months",
                                 f"{annual_rate:.2f}%"
                             ]
                         })
@@ -926,7 +884,7 @@ def main():
                 
                 with col3:
                     # PDF Download
-                    pdf_buffer = generate_pdf(schedule, principal, emi/eqi, total_payment, total_interest, tenure_months)
+                    pdf_buffer = generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure_months)
                     st.download_button(
                         label="📑 Download PDF",
                         data=pdf_buffer,
