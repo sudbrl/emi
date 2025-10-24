@@ -899,14 +899,14 @@ def main():
                     # Excel Download
                     excel_buffer = io.BytesIO()
                     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                        schedule.to_excel(writer, sheet_name='EMI Schedule', index=False)
+                        schedule.to_excel(writer, sheet_name='Schedule', index=False)
                         
                         # Add summary sheet
                         summary_df = pd.DataFrame({
-                            'Parameter': ['Loan Amount', 'Monthly EMI', 'Total Payment', 'Total Interest', 'Loan Tenure', 'Initial Rate'],
+                            'Parameter': ['Loan Amount', 'EMI/EQI', 'Total Payment', 'Total Interest', 'Loan Tenure', 'Initial Rate'],
                             'Value': [
                                 f"Rs. {principal:,.2f}",
-                                f"Rs. {emi:,.2f}",
+                                f"Rs. {emi/eqi:,.2f}",
                                 f"Rs. {total_payment:,.2f}",
                                 f"Rs. {total_interest:,.2f}",
                                 period_count,
@@ -926,7 +926,7 @@ def main():
                 
                 with col3:
                     # PDF Download
-                    pdf_buffer = generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure_months)
+                    pdf_buffer = generate_pdf(schedule, principal, emi/eqi, total_payment, total_interest, tenure_months)
                     st.download_button(
                         label="📑 Download PDF",
                         data=pdf_buffer,
