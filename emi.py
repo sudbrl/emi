@@ -72,52 +72,80 @@ def ad_to_bs(ad_date):
     # Start from reference BS date
     bs_year = BS_REFERENCE_YEAR
     bs_month = BS_REFERENCE_MONTH
-    bs_day = BS_REFERENCE_DAY + delta
+    bs_day = BS_REFERENCE_DAY
     
     # Adjust for positive days
     if delta >= 0:
+        days_to_add = delta
+        
+        # Add complete years
         while bs_year in BS_MONTHS:
             year_days = sum(BS_MONTHS[bs_year])
-            if bs_day <= year_days:
+            # Check if we need to move to next year
+            days_remaining_in_year = year_days - bs_day + 1
+            
+            if days_to_add < days_remaining_in_year:
+                # The target date is in this year
                 break
-            bs_day -= year_days
+            
+            days_to_add -= days_remaining_in_year
             bs_year += 1
+            bs_day = 1
+            bs_month = 1
         
         # Check if year is out of range
         if bs_year not in BS_MONTHS:
             return None, None, None
         
-        # Find the correct month
-        for month in range(1, 13):
-            month_days = BS_MONTHS[bs_year][month - 1]
-            if bs_day <= month_days:
-                bs_month = month
+        # Now add remaining days within the year
+        # Start from current position (bs_month, bs_day)
+        current_month = bs_month
+        current_day = bs_day
+        
+        while days_to_add > 0:
+            month_days = BS_MONTHS[bs_year][current_month - 1]
+            days_left_in_month = month_days - current_day + 1
+            
+            if days_to_add < days_left_in_month:
+                # Target is in this month
+                current_day += days_to_add
                 break
-            bs_day -= month_days
+            
+            # Move to next month
+            days_to_add -= days_left_in_month
+            current_month += 1
+            current_day = 1
+            
+            if current_month > 12:
+                # Shouldn't happen if logic is correct
+                return None, None, None
+        
+        return bs_year, current_month, current_day
+    
     else:
         # Handle negative days (date before reference)
-        bs_day = abs(bs_day)
-        while bs_day > 0:
-            bs_year -= 1
-            if bs_year not in BS_MONTHS:
-                # Out of range - return None
-                return None, None, None
-            
-            year_days = sum(BS_MONTHS[bs_year])
-            if bs_day <= year_days:
-                # Find the month from the end of the year
-                remaining = year_days - bs_day + 1
-                bs_day = remaining
-                for month in range(1, 13):
-                    month_days = BS_MONTHS[bs_year][month - 1]
-                    if bs_day <= month_days:
-                        bs_month = month
-                        break
-                    bs_day -= month_days
+        days_to_subtract = abs(delta)
+        
+        while days_to_subtract > 0:
+            # Check if we can subtract within current month
+            if days_to_subtract < bs_day:
+                bs_day -= days_to_subtract
                 break
-            bs_day -= year_days
-    
-    return bs_year, bs_month, bs_day
+            
+            # Need to go to previous month
+            days_to_subtract -= bs_day
+            bs_month -= 1
+            
+            if bs_month < 1:
+                # Go to previous year
+                bs_year -= 1
+                if bs_year not in BS_MONTHS:
+                    return None, None, None
+                bs_month = 12
+            
+            bs_day = BS_MONTHS[bs_year][bs_month - 1]
+        
+        return bs_year, bs_month, bs_day
 
 def bs_to_ad(bs_year, bs_month, bs_day):
     """Convert BS date to AD date using calendar data"""
