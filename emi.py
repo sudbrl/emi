@@ -697,6 +697,18 @@ init_session_state()
 
 def main():
     st.set_page_config(page_title="Dynamic EMI/Quarterly Calculator", page_icon="💰", layout="wide")
+    
+    # --- HIDE UI ELEMENTS ---
+    hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+    # ------------------------
+
     st.title("Dynamic EMI/Quarterly Calculator")
     
     # Payment frequency selector at the top
