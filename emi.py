@@ -847,6 +847,8 @@ def main():
 
     # Main content area - Perform calculation
     if calculate_btn:
+        # Define period_label BEFORE the try block so it is available if an error occurs
+        period_label = "Quarterly" if is_quarterly else "EMI"
         try:
             if st.session_state.rate_changes:
                 schedule, emi = apply_multiple_rate_changes(
@@ -861,7 +863,7 @@ def main():
                 schedule, emi = calculate_emi_schedule(principal, annual_rate, tenure_months, start_datetime, is_quarterly=is_quarterly)[:2]
 
             # Summary metrics
-            period_label = "Quarterly" if is_quarterly else "EMI"
+            # period_label definition removed from here as it is now above
             period_count = f"{len(schedule)} {'quarters' if is_quarterly else 'months'}"
             
             col1, col2, col3, col4 = st.columns(4)
