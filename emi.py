@@ -644,7 +644,8 @@ def main():
     # Set sidebar to be expanded by default
     st.set_page_config(page_title="Dynamic EMI/Quarterly Calculator", page_icon="💰", layout="wide", initial_sidebar_state="expanded")
     
-    hide_streamlit_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>"""
+    # FIX: Removed 'header {visibility: hidden;}' so the sidebar toggle button (arrow) stays visible
+    hide_streamlit_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;}</style>"""
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
     st.title("Dynamic EMI/Quarterly Calculator")
     
