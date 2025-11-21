@@ -656,9 +656,9 @@ def main():
 
     with st.sidebar:
         st.header("🏦 Loan Parameters")
-        principal = st.slider("Loan Amount (Rs.)", min_value=10000, max_value=100000000, value=1000000, step=10000)
-        annual_rate = st.slider("Initial Annual Interest Rate (%)", min_value=0.0, max_value=30.0, value=12.0, step=0.1, format="%.2f")
-        tenure_months = st.slider("Loan Tenure (Months)", min_value=1, max_value=360, value=60, step=1)
+        principal = st.number_input("Loan Amount (Rs.)", min_value=10000, max_value=100000000, value=1000000, step=10000)
+        annual_rate = st.number_input("Initial Annual Interest Rate (%)", min_value=0.0, max_value=30.0, value=12.0, step=0.1, format="%.2f")
+        tenure_months = st.number_input("Loan Tenure (Months)", min_value=1, max_value=360, value=60, step=1)
         date_format = st.radio("Start Date Format", ["AD", "BS"], horizontal=True)
         nepal_today = get_nepal_time()
 
@@ -721,7 +721,8 @@ def main():
 
     # --- MAIN ACTION BUTTONS (Outside Sidebar) ---
     # Placed here so they are visible even if sidebar is closed
-    action_col1, action_col2 = st.columns([3, 1])
+    # Adjusted columns to [1, 1, 3] to reduce the width of the buttons
+    action_col1, action_col2, _ = st.columns([1, 1, 3])
     with action_col1:
         calculate_btn = st.button("📊 Calculate Schedule", type="primary", use_container_width=True)
     with action_col2:
