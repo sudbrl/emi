@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date # Added date import
 import calendar
 import io
 from reportlab.lib.pagesizes import A4
@@ -52,7 +52,6 @@ BS_MONTHS = {
 }
 
 # CORRECTED Reference date: 2070/01/01 BS = 2013/04/14 AD
-# NOTE: The original code had 2013/04/13, which was 1 day off.
 BS_REFERENCE_YEAR = 2070
 BS_REFERENCE_MONTH = 1
 BS_REFERENCE_DAY = 1
@@ -73,7 +72,11 @@ def ad_to_bs(ad_date):
     if isinstance(ad_date, pd.Timestamp):
         ad_date = ad_date.to_pydatetime()
     
-    # Ensure ad_date is just date, no time
+    # Handle 'date' objects by converting to 'datetime' at midnight
+    if isinstance(ad_date, date) and not isinstance(ad_date, datetime):
+        ad_date = datetime.combine(ad_date, datetime.min.time())
+
+    # Ensure ad_date is just date, no time (normalize existing datetime)
     if isinstance(ad_date, datetime):
         ad_date = datetime(ad_date.year, ad_date.month, ad_date.day)
 
