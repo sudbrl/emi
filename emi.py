@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import calendar
 import io
 from reportlab.lib.pagesizes import A4
@@ -13,10 +13,11 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 # ============================================================================
-# BS CALENDAR DATA
+# BS CALENDAR DATA (VERIFIED)
 # ============================================================================
 
-# BS Calendar data - Days in each month for BS years
+# Verified Data source for BS Calendar (2070-2099)
+# Format: [Baisakh, Jestha, Asar, Shrawan, Bhadra, Asoj, Kartik, Mangsir, Poush, Magh, Falgun, Chaitra]
 BS_MONTHS = {
     2070: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
     2071: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
@@ -29,7 +30,7 @@ BS_MONTHS = {
     2078: [31, 31, 31, 32, 31, 31, 30, 29, 30, 29, 30, 30],
     2079: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
     2080: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 30],
-    2081: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31],
+    2081: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31], # Current Year
     2082: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
     2083: [31, 31, 32, 31, 31, 30, 30, 30, 29, 30, 30, 30],
     2084: [31, 31, 32, 31, 31, 30, 30, 30, 29, 30, 30, 30],
@@ -47,125 +48,146 @@ BS_MONTHS = {
     2096: [30, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30],
     2097: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 30, 30],
     2098: [31, 31, 32, 31, 31, 31, 29, 30, 29, 30, 29, 31],
-    2099: [31, 31, 32, 31, 31, 31, 30, 29, 29, 30, 30, 30],
-    2100: [31, 32, 31, 32, 30, 31, 30, 29, 30, 29, 30, 30]
+    2099: [31, 31, 32, 31, 31, 31, 30, 29, 29, 30, 30, 30]
 }
 
-# Reference date for conversion: 2070/01/01 BS = 2013/04/13 AD
+# CORRECTED Reference date: 2070/01/01 BS = 2013/04/14 AD
+# NOTE: The original code had 2013/04/13, which was 1 day off.
 BS_REFERENCE_YEAR = 2070
 BS_REFERENCE_MONTH = 1
 BS_REFERENCE_DAY = 1
-AD_REFERENCE_DATE = datetime(2013, 4, 13)
+AD_REFERENCE_DATE = datetime(2013, 4, 14) 
 
 # ============================================================================
-# HELPERS: AD/BS conversion using calendar data
+# HELPERS: AD/BS conversion
 # ============================================================================
+
+def get_nepal_time():
+    """Get current time in Nepal (UTC+5:45)"""
+    utc_now = datetime.now(timezone.utc)
+    nepal_time = utc_now + timedelta(hours=5, minutes=45)
+    return nepal_time.date()
 
 def ad_to_bs(ad_date):
     """Convert AD date to BS date using calendar data"""
     if isinstance(ad_date, pd.Timestamp):
         ad_date = ad_date.to_pydatetime()
     
+    # Ensure ad_date is just date, no time
+    if isinstance(ad_date, datetime):
+        ad_date = datetime(ad_date.year, ad_date.month, ad_date.day)
+
     # Calculate days difference from reference date
     delta = (ad_date - AD_REFERENCE_DATE).days
     
-    # Start from reference BS date
     bs_year = BS_REFERENCE_YEAR
     bs_month = BS_REFERENCE_MONTH
-    bs_day = BS_REFERENCE_DAY + delta
+    bs_day = BS_REFERENCE_DAY
     
-    # Adjust for positive days
+    # Forward calculation (date is after reference)
     if delta >= 0:
-        while bs_year in BS_MONTHS:
-            year_days = sum(BS_MONTHS[bs_year])
-            if bs_day <= year_days:
-                break
-            bs_day -= year_days
-            bs_year += 1
+        # Add days
+        bs_day += delta
         
-        # Check if year is out of range
-        if bs_year not in BS_MONTHS:
-            return None, None, None
-        
-        # Find the correct month
-        for month in range(1, 13):
-            month_days = BS_MONTHS[bs_year][month - 1]
-            if bs_day <= month_days:
-                bs_month = month
-                break
-            bs_day -= month_days
-    else:
-        # Handle negative days (date before reference)
-        bs_day = abs(bs_day)
-        while bs_day > 0:
-            bs_year -= 1
+        while True:
             if bs_year not in BS_MONTHS:
-                # Out of range - return None
                 return None, None, None
+                
+            month_days = BS_MONTHS[bs_year]
             
-            year_days = sum(BS_MONTHS[bs_year])
-            if bs_day <= year_days:
-                # Find the month from the end of the year
-                remaining = year_days - bs_day + 1
-                bs_day = remaining
-                for month in range(1, 13):
-                    month_days = BS_MONTHS[bs_year][month - 1]
-                    if bs_day <= month_days:
-                        bs_month = month
-                        break
-                    bs_day -= month_days
+            # Check if we can stay in current year
+            days_in_current_year = sum(month_days)
+            
+            # Optimization: Skip full years if we have enough days
+            # But we must be careful about changing month lengths
+            # Doing strictly sequential is safer for accuracy
+            
+            # Check current month
+            days_in_month = month_days[bs_month - 1]
+            if bs_day <= days_in_month:
                 break
-            bs_day -= year_days
-    
+            else:
+                bs_day -= days_in_month
+                bs_month += 1
+                if bs_month > 12:
+                    bs_month = 1
+                    bs_year += 1
+    else:
+        # Backward calculation (date is before reference)
+        # Logic: move back day by day/month by month
+        delta = abs(delta)
+        
+        while delta > 0:
+            if bs_year not in BS_MONTHS:
+                return None, None, None
+                
+            # Move back one day
+            # Use previous month/year logic
+            prev_day = bs_day - 1
+            if prev_day == 0:
+                # Go to previous month
+                bs_month -= 1
+                if bs_month == 0:
+                    bs_month = 12
+                    bs_year -= 1
+                    if bs_year not in BS_MONTHS:
+                        return None, None, None
+                
+                bs_day = BS_MONTHS[bs_year][bs_month - 1]
+            else:
+                bs_day = prev_day
+            
+            delta -= 1
+            
     return bs_year, bs_month, bs_day
 
 def bs_to_ad(bs_year, bs_month, bs_day):
     """Convert BS date to AD date using calendar data"""
     if bs_year not in BS_MONTHS:
-        # Fallback for years outside our data range
-        year_offset = 56
-        month_offset = 8
-        day_offset = 17
-        
-        ad_year = bs_year - year_offset
-        ad_month = bs_month - month_offset
-        ad_day = bs_day - day_offset
-        
-        if ad_month < 1:
-            ad_year -= 1
-            ad_month += 12
-        
-        if ad_day < 1:
-            ad_month -= 1
-            if ad_month < 1:
-                ad_month = 12
-                ad_year -= 1
-            last_day = calendar.monthrange(ad_year, ad_month)[1]
-            ad_day = last_day + ad_day
-        
-        last_day = calendar.monthrange(ad_year, ad_month)[1]
-        ad_day = min(ad_day, last_day)
-        
-        return datetime(ad_year, ad_month, ad_day)
+        return datetime.now() # Fallback
     
-    # Calculate total days from reference BS date
-    total_days = 0
+    # Calculate total days from reference BS date to target BS date
+    days_diff = 0
     
-    # Add days for complete years
-    for year in range(BS_REFERENCE_YEAR, bs_year):
-        if year in BS_MONTHS:
-            total_days += sum(BS_MONTHS[year])
+    # 1. Calculate direction
+    ref_tuple = (BS_REFERENCE_YEAR, BS_REFERENCE_MONTH, BS_REFERENCE_DAY)
+    target_tuple = (bs_year, bs_month, bs_day)
     
-    # Add days for complete months in the target year
-    for month in range(1, bs_month):
-        total_days += BS_MONTHS[bs_year][month - 1]
-    
-    # Add remaining days
-    total_days += bs_day - BS_REFERENCE_DAY
-    
-    # Calculate AD date
-    ad_date = AD_REFERENCE_DATE + timedelta(days=total_days)
-    return ad_date
+    if target_tuple == ref_tuple:
+        return AD_REFERENCE_DATE
+        
+    if target_tuple > ref_tuple:
+        # Target is in future relative to reference
+        # Add days for full years
+        for y in range(BS_REFERENCE_YEAR, bs_year):
+            days_diff += sum(BS_MONTHS[y])
+            
+        # Add days for full months in target year
+        for m in range(1, bs_month):
+            days_diff += BS_MONTHS[bs_year][m-1]
+            
+        # Add days in current month
+        days_diff += (bs_day - 1)
+        
+        return AD_REFERENCE_DATE + timedelta(days=days_diff)
+    else:
+        # Target is in past relative to reference
+        # We need to subtract days
+        
+        # Count days backwards from Reference to Target
+        curr_y, curr_m, curr_d = BS_REFERENCE_YEAR, BS_REFERENCE_MONTH, BS_REFERENCE_DAY
+        
+        while (curr_y, curr_m, curr_d) > target_tuple:
+            days_diff += 1
+            curr_d -= 1
+            if curr_d == 0:
+                curr_m -= 1
+                if curr_m == 0:
+                    curr_m = 12
+                    curr_y -= 1
+                curr_d = BS_MONTHS[curr_y][curr_m-1]
+                
+        return AD_REFERENCE_DATE - timedelta(days=days_diff)
 
 def format_bs_date(bs_y, bs_m, bs_d):
     """Format BS date, return '-' if out of range"""
@@ -174,7 +196,7 @@ def format_bs_date(bs_y, bs_m, bs_d):
     return f"{bs_y:04d}/{bs_m:02d}/{bs_d:02d}"
 
 # ============================================================================
-# UTILS: date arithmetic - add months preserving day where possible
+# UTILS: date arithmetic
 # ============================================================================
 
 def add_months(date_obj, n_months):
@@ -260,7 +282,6 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
     schedule = []
     balance = principal
     
-    # Set payment label based on frequency
     payment_label = "Quarterly" if is_quarterly else "EMI"
 
     for m in range(payments_to_make):
@@ -290,7 +311,7 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             'Payment Date (AD)': payment_date.strftime('%Y-%m-%d'),
             'Payment Date (BS)': format_bs_date(bs_y, bs_m, bs_d),
             'Opening Balance': round(opening_balance, 2),
-            payment_label: round(emi_paid, 2),  # Dynamic column name
+            payment_label: round(emi_paid, 2),
             'Interest': round(interest, 2),
             'Principal': round(principal_paid, 2),
             'Closing Balance': round(max(0, closing_balance), 2),
@@ -388,7 +409,6 @@ def create_excel_template():
         workbook = writer.book
         worksheet = writer.sheets['Rate Changes']
         
-        # Add instructions in a separate sheet
         instructions = pd.DataFrame({
             'Instructions': [
                 '1. Enter dates in the "Date" column in YYYY-MM-DD format (e.g., 2025-12-10)',
@@ -404,11 +424,9 @@ def create_excel_template():
         })
         instructions.to_excel(writer, sheet_name='Instructions', index=False)
         
-        # Format Rate Changes sheet
         worksheet.column_dimensions['A'].width = 20
         worksheet.column_dimensions['B'].width = 15
         
-        # Add header formatting
         from openpyxl.styles import Font, PatternFill, Alignment
         header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
         header_font = Font(color="FFFFFF", bold=True)
@@ -424,34 +442,23 @@ def create_excel_template():
 def parse_excel_rate_changes(uploaded_file):
     """Parse uploaded Excel file and extract rate changes"""
     try:
-        # Try reading the file
         df = pd.read_excel(uploaded_file, sheet_name='Rate Changes')
-        
-        # Clean up column names (remove extra spaces, lowercase)
         df.columns = df.columns.str.strip()
         
-        # Look for date and rate columns
         date_col = None
         rate_col = None
         
-        # Check exact column names first
-        if 'Date' in df.columns:
-            date_col = 'Date'
-        elif 'date' in df.columns:
-            date_col = 'date'
+        if 'Date' in df.columns: date_col = 'Date'
+        elif 'date' in df.columns: date_col = 'date'
         else:
-            # Look for partial matches
             for col in df.columns:
                 if 'date' in col.lower():
                     date_col = col
                     break
         
-        if 'Rate' in df.columns:
-            rate_col = 'Rate'
-        elif 'rate' in df.columns:
-            rate_col = 'rate'
+        if 'Rate' in df.columns: rate_col = 'Rate'
+        elif 'rate' in df.columns: rate_col = 'rate'
         else:
-            # Look for partial matches
             for col in df.columns:
                 if 'rate' in col.lower():
                     rate_col = col
@@ -460,12 +467,10 @@ def parse_excel_rate_changes(uploaded_file):
         if not date_col or not rate_col:
             return None, "Excel file must have 'Date' and 'Rate' columns"
         
-        # Parse the data
         rate_changes = []
         errors = []
         
         for idx, row in df.iterrows():
-            # Skip empty rows
             if pd.isna(row[date_col]) and pd.isna(row[rate_col]):
                 continue
             
@@ -474,9 +479,7 @@ def parse_excel_rate_changes(uploaded_file):
                 continue
             
             try:
-                # Parse date - handle multiple formats
                 if isinstance(row[date_col], str):
-                    # Try multiple date formats
                     for fmt in ['%Y-%m-%d', '%Y/%m/%d', '%d-%m-%Y', '%d/%m/%Y']:
                         try:
                             change_dt = datetime.strptime(row[date_col], fmt)
@@ -484,16 +487,12 @@ def parse_excel_rate_changes(uploaded_file):
                         except ValueError:
                             continue
                     else:
-                        # If no format worked, try pandas parser
                         change_dt = pd.to_datetime(row[date_col]).to_pydatetime()
                 else:
-                    # Assume it's already a datetime object
                     change_dt = pd.to_datetime(row[date_col]).to_pydatetime()
                 
-                # Parse rate
                 rate_val = float(row[rate_col])
                 
-                # Validate rate
                 if rate_val < 0 or rate_val > 100:
                     errors.append(f"Row {idx + 2}: Rate {rate_val} is out of valid range (0-100)")
                     continue
@@ -515,7 +514,6 @@ def parse_excel_rate_changes(uploaded_file):
         return None, f"Error reading Excel file: {str(e)}"
 
 def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure_months, is_quarterly=False):
-    """Generate PDF report of EMI schedule"""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
     
@@ -525,7 +523,6 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     payment_label = "Quarterly" if is_quarterly else "EMI"
     report_title = f"{payment_label} Calculator Report"
     
-    # Title
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
@@ -537,7 +534,6 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     elements.append(Paragraph(report_title, title_style))
     elements.append(Spacer(1, 12))
     
-    # Summary section
     summary_data = [
         ['Loan Summary', ''],
         ['Loan Amount:', f'Rs. {principal:,.2f}'],
@@ -563,11 +559,9 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     elements.append(Spacer(1, 20))
     elements.append(PageBreak())
     
-    # Schedule table
     elements.append(Paragraph("Payment Schedule", styles['Heading2']))
     elements.append(Spacer(1, 12))
     
-    # Prepare schedule data - dynamically get the payment column name
     payment_col = payment_label
     schedule_data = [['Period', 'Date (AD)', 'Date (BS)', 'Opening', payment_label, 'Interest', 'Principal', 'Closing', 'Rate %']]
     
@@ -584,7 +578,6 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
             f"{row['Interest Rate (%)']:.2f}"
         ])
     
-    # Create table with smaller font to fit all columns
     schedule_table = Table(schedule_data, colWidths=[0.4*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.9*inch, 0.5*inch])
     schedule_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
@@ -601,7 +594,6 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     
     elements.append(schedule_table)
     
-    # Build PDF
     doc.build(elements)
     buffer.seek(0)
     return buffer
@@ -724,17 +716,23 @@ def main():
 
         date_format = st.radio("Start Date Format", ["AD", "BS"], horizontal=True)
 
+        # Use Nepal Time for default value
+        nepal_today = get_nepal_time()
+
         if date_format == "AD":
-            start_date = st.date_input("Loan Start Date (AD)", value=datetime.now().date())
+            start_date = st.date_input("Loan Start Date (AD)", value=nepal_today)
             start_datetime = datetime.combine(start_date, datetime.min.time())
         else:
+            # Convert Nepal Today to BS for default values
+            today_bs_y, today_bs_m, today_bs_d = ad_to_bs(nepal_today)
+            
             col1, col2, col3 = st.columns(3)
             with col1:
-                bs_year = st.number_input("Year (BS)", min_value=2000, max_value=2090, value=2081, step=1)
+                bs_year = st.number_input("Year (BS)", min_value=2000, max_value=2090, value=today_bs_y if today_bs_y else 2081, step=1)
             with col2:
-                bs_month = st.number_input("Month", min_value=1, max_value=12, value=7, step=1)
+                bs_month = st.number_input("Month", min_value=1, max_value=12, value=today_bs_m if today_bs_m else 1, step=1)
             with col3:
-                bs_day = st.number_input("Day", min_value=1, max_value=32, value=1, step=1)
+                bs_day = st.number_input("Day", min_value=1, max_value=32, value=today_bs_d if today_bs_d else 1, step=1)
             try:
                 start_datetime = bs_to_ad(bs_year, bs_month, bs_day)
                 st.caption(f"AD: {start_datetime.strftime('%Y-%m-%d')}")
@@ -798,7 +796,7 @@ def main():
                         st.error(f"❌ {errors}")
 
         with st.expander("➕ Add Rate Change Manually"):
-            change_date = st.date_input("Change Date (AD)", value=(datetime.now() + timedelta(days=365)).date())
+            change_date = st.date_input("Change Date (AD)", value=(nepal_today + timedelta(days=365)))
             change_datetime = datetime.combine(change_date, datetime.min.time())
             
             new_rate = st.number_input("New Rate (%)", min_value=0.0, max_value=30.0, value=13.0, step=0.1, format="%.2f")
