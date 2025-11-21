@@ -18,7 +18,12 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 # Verified Data source for BS Calendar (2070-2099)
 BS_MONTHS = {
-    2070: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
+     2065: (31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
+        2066: (31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 29, 31),
+        2067: (31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
+        2068: (31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30),
+        2069: (31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
+          2070: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
     2071: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
     2072: [31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30],
     2073: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31],
@@ -636,10 +641,14 @@ def create_interest_rate_timeline(schedule):
 def init_session_state():
     if 'rate_changes' not in st.session_state: st.session_state.rate_changes = []
     if 'upload_key' not in st.session_state: st.session_state.upload_key = 0
+    if 'calculated' not in st.session_state: st.session_state.calculated = False
+
 init_session_state()
 
 def main():
-    st.set_page_config(page_title="Dynamic EMI/Quarterly Calculator", page_icon="💰", layout="wide")
+    # Set sidebar to be expanded by default
+    st.set_page_config(page_title="Dynamic EMI/Quarterly Calculator", page_icon="💰", layout="wide", initial_sidebar_state="expanded")
+    
     hide_streamlit_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>"""
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
     st.title("Dynamic EMI/Quarterly Calculator")
@@ -715,12 +724,22 @@ def main():
                 with col2:
                     if st.button("🗑️", key=f"del_{orig_idx}_{idx}"): st.session_state.rate_changes.pop(orig_idx); st.rerun()
 
-        st.divider()
+    # --- MAIN ACTION BUTTONS (Outside Sidebar) ---
+    # Placed here so they are visible even if sidebar is closed
+    action_col1, action_col2 = st.columns([3, 1])
+    with action_col1:
         calculate_btn = st.button("📊 Calculate Schedule", type="primary", use_container_width=True)
+    with action_col2:
         if st.session_state.rate_changes:
-            if st.button("🔄 Reset Rate Changes", use_container_width=True): st.session_state.rate_changes = []; st.rerun()
+            if st.button("🔄 Reset Rates", use_container_width=True): 
+                st.session_state.rate_changes = []
+                st.rerun()
 
     if calculate_btn:
+        st.session_state.calculated = True
+
+    # --- RESULTS DISPLAY (Persisted via Session State) ---
+    if st.session_state.calculated:
         period_label = "Quarterly" if is_quarterly else "EMI"
         try:
             if st.session_state.rate_changes:
