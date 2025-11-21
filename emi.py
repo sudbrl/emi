@@ -18,12 +18,7 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 # Verified Data source for BS Calendar (2070-2099)
 BS_MONTHS = {
-     2065: (31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
-        2066: (31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 29, 31),
-        2067: (31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
-        2068: (31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30),
-        2069: (31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
-          2070: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
+    2070: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
     2071: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
     2072: [31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30],
     2073: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31],
@@ -661,9 +656,9 @@ def main():
 
     with st.sidebar:
         st.header("🏦 Loan Parameters")
-        principal = st.number_input("Loan Amount (Rs.)", min_value=10000, max_value=100000000, value=1000000, step=10000)
-        annual_rate = st.number_input("Initial Annual Interest Rate (%)", min_value=0.0, max_value=30.0, value=12.0, step=0.1, format="%.2f")
-        tenure_months = st.number_input("Loan Tenure (Months)", min_value=1, max_value=360, value=60, step=1)
+        principal = st.slider("Loan Amount (Rs.)", min_value=10000, max_value=100000000, value=1000000, step=10000)
+        annual_rate = st.slider("Initial Annual Interest Rate (%)", min_value=0.0, max_value=30.0, value=12.0, step=0.1, format="%.2f")
+        tenure_months = st.slider("Loan Tenure (Months)", min_value=1, max_value=360, value=60, step=1)
         date_format = st.radio("Start Date Format", ["AD", "BS"], horizontal=True)
         nepal_today = get_nepal_time()
 
