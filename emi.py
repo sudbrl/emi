@@ -863,7 +863,6 @@ def main():
                 schedule, emi = calculate_emi_schedule(principal, annual_rate, tenure_months, start_datetime, is_quarterly=is_quarterly)[:2]
 
             # Summary metrics
-            # period_label definition removed from here as it is now above
             period_count = f"{len(schedule)} {'quarters' if is_quarterly else 'months'}"
             
             col1, col2, col3, col4 = st.columns(4)
