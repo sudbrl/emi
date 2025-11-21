@@ -258,6 +258,8 @@ def add_months(date_obj, n_months):
     return datetime(year, month, min(day, last_day))
 
 def payment_date_10th(start_date, offset_months, is_quarterly=False):
+    # NOTE: This function is primarily used for EMI. 
+    # For Quarterly (EQI) in Nepal context, we use get_next_bs_quarter_end instead.
     months_to_add = offset_months * 3 if is_quarterly else offset_months
     if start_date.day <= 10:
         first_payment_base = start_date.replace(day=10)
@@ -268,11 +270,63 @@ def payment_date_10th(start_date, offset_months, is_quarterly=False):
     d = min(10, last_day)
     return datetime(pd_date.year, pd_date.month, d)
 
+def get_next_bs_quarter_end(from_date_ad):
+    """
+    Finds the next BS quarter end date strictly after from_date_ad.
+    Quarter ends are the last days of BS Months 3 (Ashad), 6 (Ashwin), 9 (Poush), 12 (Chaitra).
+    """
+    bs_y, bs_m, bs_d = ad_to_bs(from_date_ad)
+    
+    if bs_y is None: return from_date_ad + timedelta(days=90) # Fallback
+    
+    # Determine target BS month
+    if bs_m < 3:
+        target_m = 3
+        target_y = bs_y
+    elif bs_m < 6:
+        target_m = 6
+        target_y = bs_y
+    elif bs_m < 9:
+        target_m = 9
+        target_y = bs_y
+    elif bs_m < 12:
+        target_m = 12
+        target_y = bs_y
+    else:
+        # Currently in Month 12, next quarter end is Month 3 of next year
+        target_m = 3
+        target_y = bs_y + 1
+        
+    # Get last day of that target month
+    if target_y not in BS_MONTHS: 
+        return from_date_ad + timedelta(days=90) # Fallback
+        
+    target_d = BS_MONTHS[target_y][target_m - 1]
+    
+    target_ad = bs_to_ad(target_y, target_m, target_d)
+    
+    # Ensure target is in future. If today is exactly the quarter end, we likely want the NEXT one.
+    # Or if calculation resulted in a past date (unlikely with logic above unless dates are mixed), move forward.
+    if target_ad <= from_date_ad:
+        # Recurse starting from tomorrow to find the next valid quarter end
+        return get_next_bs_quarter_end(from_date_ad + timedelta(days=1))
+        
+    return target_ad
+
 def count_payments_between(segment_start_date, segment_end_date, is_quarterly=False, max_check=5000):
     count = 0
+    current_marker_date = segment_start_date
+    
     for off in range(max_check):
-        pd = payment_date_10th(segment_start_date, off, is_quarterly)
-        if pd < segment_end_date:
+        if is_quarterly:
+            # For quarterly, we jump from one BS quarter end to the next
+            pd_date = get_next_bs_quarter_end(current_marker_date)
+            current_marker_date = pd_date # Advance the marker
+        else:
+            # For EMI, we use the standard 10th of the month logic
+            pd_date = payment_date_10th(segment_start_date, off, is_quarterly=False)
+            
+        if pd_date < segment_end_date:
             count += 1
         else:
             break
@@ -330,8 +384,19 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
     balance = principal
     payment_label = "Quarterly" if is_quarterly else "EMI"
 
+    # Track previous payment date for BS Quarter Logic
+    previous_payment_date = start_date
+
     for m in range(payments_to_make):
-        payment_date = payment_date_10th(start_date, m, is_quarterly)
+        # Determine Payment Date
+        if is_quarterly:
+            # EQI: Finds next BS Quarter End (End of Ashad, Ashwin, Poush, Chaitra)
+            payment_date = get_next_bs_quarter_end(previous_payment_date)
+            previous_payment_date = payment_date # Update for next iteration
+        else:
+            # EMI: Standard 10th of month logic
+            payment_date = payment_date_10th(start_date, m, is_quarterly=False)
+
         try:
             bs_y, bs_m, bs_d = ad_to_bs(payment_date)
         except Exception:
@@ -446,6 +511,12 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
             current_principal = schedule.iloc[-1]['Closing Balance']
             if is_quarterly:
                 current_month_index = int(schedule.iloc[-1]['Period'][1:]) + 1
+                # Update seg_start for next loop to be the last payment date, ensuring continuity
+                # Actually, the loop variable seg_start comes from rate changes.
+                # But calculate_emi_schedule needs the correct 'previous date' context.
+                # Because we pass 'seg_start' as 'start_date' to calculate_emi_schedule,
+                # and calculate_emi_schedule uses that to find the *next* quarter end,
+                # we must ensure continuity is respected implicitly by the rate change date.
             else:
                 current_month_index = int(schedule.iloc[-1]['Period']) + 1
 
@@ -651,8 +722,11 @@ def main():
     
     payment_freq = st.radio("Payment Frequency", ["EMI (Monthly)", "Quarterly"], horizontal=True)
     is_quarterly = (payment_freq == "Quarterly")
-    freq_text = "quarter" if is_quarterly else "month"
-    st.markdown(f"Payments are scheduled on the **10th** of each AD {freq_text} and remain equal over period")
+    
+    if is_quarterly:
+        st.markdown(f"Payments are scheduled on **BS Quarter Ends** (Ashad, Ashwin, Poush, Chaitra).")
+    else:
+        st.markdown(f"Payments are scheduled on the **10th** of each AD month.")
     st.divider()
 
     with st.sidebar:
