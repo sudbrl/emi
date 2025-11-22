@@ -24,7 +24,7 @@ def load_custom_css():
         /* Global Settings */
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
-            color: #1e293b;
+            color: #673AB7;
             font-size: 15px;
             line-height: 1.6;
         }
