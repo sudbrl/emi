@@ -15,38 +15,38 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 # ============================================================================
 # PREMIUM VISUAL STYLING & CONFIG
 # ============================================================================
+# ============================================================================
+# BS CALENDAR DATA (VERIFIED)
+# ============================================================================
 def load_custom_css():
     st.markdown("""
         <style>
         /* Import Premium Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
-        
-        /* Global Settings */
+        /* Global text: improve contrast for mobile */
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
-            color: #673AB7;
-            font-size: 15px;
+            color: #1e293b; /* Darker gray for better contrast */
+            font-size: 16px; /* Minimum readable size on mobile */
             line-height: 1.6;
         }
-        
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Poppins', sans-serif;
             font-weight: 700;
             letter-spacing: -0.02em;
+            color: #0f766e; /* Teal headings for clarity */
         }
-
         /* App Background */
         .stApp {
             background: linear-gradient(135deg, #f0f9ff 0%, #cffafe 100%);
             background-attachment: fixed;
         }
-        
         /* Main Content Container */
         .block-container {
             padding-top: 2rem !important;
             padding-bottom: 2rem !important;
             max-width: 1400px !important;
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.95); /* Less transparency for better text clarity */
             backdrop-filter: blur(12px);
             border-radius: 24px;
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
@@ -54,47 +54,71 @@ def load_custom_css():
             margin-top: 1rem;
             margin-bottom: 2rem;
         }
-        
-        /* Sidebar Container */
+        /* Sidebar */
         section[data-testid="stSidebar"] {
-            background: #0f172a; /* Slate 900 */
-            border-right: none;
+            background: #0f172a;
             box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
         }
-        
         section[data-testid="stSidebar"] h1,
         section[data-testid="stSidebar"] h2,
-        section[data-testid="stSidebar"] h3,
         section[data-testid="stSidebar"] label,
         section[data-testid="stSidebar"] p,
         section[data-testid="stSidebar"] .stMarkdown {
             color: #f8fafc !important;
         }
-        
-        /* ============================================= */
-        /* INPUT FIELDS STYLING */
-        /* ============================================= */
-        
-        /* 1. Main Area Inputs (Light Mode) */
-        .stTextInput input, .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
-            background-color: #ffffff !important; 
-            border: 1px solid #94a3b8 !important;
-            color: #0f172a !important; 
+
+        /* =============== MAIN AREA INPUTS (VISIBLE ON MOBILE) =============== */
+        .block-container .stTextInput input,
+        .block-container .stNumberInput input,
+        .block-container .stDateInput input,
+        .block-container .stSelectbox div[data-baseweb="select"] > div {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
             border-radius: 8px !important;
+            font-size: 16px !important;
+        }
+        .block-container .stSelectbox div[data-baseweb="select"] {
+            color: #0f172a !important;
         }
 
-        /* 2. Sidebar Inputs (Dark Mode) */
+        /* ✅ FIXED: Visible +/- Stepper Buttons in Main Area */
+        .block-container [data-testid="stNumberInput"] button {
+            background-color: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #cbd5e1 !important;
+            width: 28px !important;
+            height: 28px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 6px !important;
+            font-size: 14px !important;
+            opacity: 1 !important;
+        }
+        .block-container [data-testid="stNumberInput"] button:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        /* Ensure SVG icons inside steppers are visible */
+        .block-container [data-testid="stNumberInput"] svg {
+            fill: #475569 !important;
+        }
+
+        /* Sidebar inputs (keep dark mode) */
         section[data-testid="stSidebar"] .stTextInput input,
         section[data-testid="stSidebar"] .stNumberInput input,
         section[data-testid="stSidebar"] .stDateInput input,
-        section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {
-            background-color: #334155 !important; 
+        section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div {
+            background-color: #334155 !important;
+            color: #ffffff !important;
             border: 1px solid #475569 !important;
-            color: #ffffff !important; 
             border-radius: 8px !important;
         }
-        
-        /* Sidebar Stepper Buttons & Icons Fix */
+        section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {
+            color: #ffffff !important;
+        }
+        /* Sidebar stepper buttons and icons */
         section[data-testid="stSidebar"] [data-testid="stNumberInput"] button {
             background-color: transparent !important;
             color: white !important;
@@ -107,10 +131,8 @@ def load_custom_css():
         }
 
         /* ============================================= */
-        /* BUTTON STYLING */
+        /* BUTTON STYLING (Ensure visible on mobile) */
         /* ============================================= */
-        
-        /* Global Buttons (Base Style) */
         .stButton > button, .stDownloadButton > button {
             border-radius: 10px;
             font-weight: 600;
@@ -118,56 +140,37 @@ def load_custom_css():
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            font-size: 16px !important;
+            min-height: 48px;
         }
-        
-        /* 1. MAIN AREA BUTTONS (Light Theme) */
         .block-container .stButton > button[kind="primary"] {
             background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-            color: white;
+            color: white !important;
         }
-        
         .block-container .stButton > button:not([kind="primary"]) {
             background: white;
             border: 1px solid #ef4444;
-            color: #ef4444;
+            color: #ef4444 !important;
         }
-        
         .block-container .stDownloadButton > button {
             background: #f1f5f9;
-            color: #334155;
+            color: #334155 !important;
             border: 1px solid #cbd5e1;
         }
-        .block-container .stDownloadButton > button:hover {
-            background: #e2e8f0;
-            color: #0f172a;
-            border-color: #94a3b8;
-        }
-
-        /* 2. SIDEBAR BUTTONS (Dark Theme Fixes) */
+        section[data-testid="stSidebar"] .stButton > button,
         section[data-testid="stSidebar"] .stDownloadButton > button {
             background-color: #334155 !important;
             color: #ffffff !important;
             border: 1px solid #475569 !important;
         }
+        section[data-testid="stSidebar"] .stButton > button:hover,
         section[data-testid="stSidebar"] .stDownloadButton > button:hover {
             background-color: #0d9488 !important;
-            border-color: #0d9488 !important;
             color: white !important;
-        }
-        
-        section[data-testid="stSidebar"] .stButton > button {
-            background-color: #334155 !important;
-            color: #ffffff !important;
-            border: 1px solid #475569 !important;
-        }
-        section[data-testid="stSidebar"] .stButton > button:hover {
-            background-color: #0d9488 !important;
             border-color: #0d9488 !important;
-            color: white !important;
         }
 
-        /* ============================================= */
-        
+        /* Other styles unchanged */
         div[data-testid="stMetric"] {
             background: white;
             border-left: 5px solid #0d9488;
@@ -175,16 +178,13 @@ def load_custom_css():
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        
         .stTabs [data-baseweb="tab-list"] {
             border-bottom: 2px solid #e2e8f0;
         }
-        
         .stTabs [aria-selected="true"] {
             color: #0d9488;
             border-bottom: 3px solid #0d9488;
         }
-        
         .info-box {
             background: #f0fdfa;
             padding: 1.25rem;
@@ -193,16 +193,11 @@ def load_custom_css():
             color: #134e4a;
             margin-bottom: 1.5rem;
         }
-        
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         </style>
     """, unsafe_allow_html=True)
-
-# ============================================================================
-# BS CALENDAR DATA (VERIFIED)
-# ============================================================================
 BS_MONTHS = {
     2070: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
     2071: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
