@@ -519,7 +519,6 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             'Period': period_label,
             'Payment Date (AD)': payment_date.strftime('%Y-%m-%d'),
             'Payment Date (BS)': format_bs_date(bs_y, bs_m, bs_d),
-            'Days': days_in_period, # Added for clarity
             'Opening Balance': round(opening_balance, 2),
             payment_label: round(emi_paid, 2),
             'Interest': round(interest, 2),
