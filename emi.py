@@ -501,19 +501,14 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
         opening_balance = balance
         
         # ---------------------------------------------------------
-        # CRITICAL LOGIC: Interest Calculation
-        # For Quarterly: Use Daily Reducing Balance (Exact Days)
-        # For EMI: Use Monthly Reducing Balance (1/12th Rate) to match tenure
+        # CRITICAL LOGIC: Daily Reducing Balance (Exact Days)
+        # Interest is based on the exact difference between due dates
         # ---------------------------------------------------------
+        days_in_period = (payment_date - previous_payment_date).days
+        days_in_period = max(1, days_in_period) 
         
-        if is_quarterly:
-            days_in_period = (payment_date - previous_payment_date).days
-            days_in_period = max(1, days_in_period)
-            interest = balance * (annual_rate / 100) * (days_in_period / 365)
-        else:
-            # Standard Monthly Interest = Balance * (Annual Rate / 1200)
-            # This aligns with the standard EMI formula assumptions
-            interest = balance * (annual_rate / 1200)
+        # Daily Rate = Annual Rate / 365
+        interest = balance * (annual_rate / 100) * (days_in_period / 365)
         # ---------------------------------------------------------
         
         principal_paid = emi - interest
@@ -549,9 +544,67 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             
     return pd.DataFrame(schedule), emi, actual_tenure
 
-def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_date, rate_change_schedule, is_quarterly=False):
+def calculate_precise_emi(principal, annual_rate, tenure_months, start_date, is_quarterly=False):
+    """
+    Iteratively finds the exact EMI required to finish the loan in exactly 'tenure_months'
+    considering the exact day-count logic (Daily Reducing Balance).
+    """
+    # Target tenure
+    target_periods = int(np.ceil(tenure_months / 3)) if is_quarterly else int(tenure_months)
+    
+    # Initial bounds for Binary Search
+    standard_emi = calculate_emi(principal, annual_rate, tenure_months, is_quarterly)
+    low = principal / target_periods # Absolute minimum (0% interest)
+    high = standard_emi * 2.0 # Safe upper bound
+    
+    best_emi = standard_emi
+    
+    # 40 iterations gives high precision
+    for _ in range(40):
+        mid_emi = (low + high) / 2
+        
+        # Run simulation with this fixed EMI
+        schedule, _, _ = calculate_emi_schedule(
+            principal, annual_rate, tenure_months, start_date, 
+            fixed_emi=mid_emi, is_quarterly=is_quarterly
+        )
+        
+        if schedule is None: 
+            # EMI too low (covered by interest check inside schedule, but returns None)
+            low = mid_emi
+            continue
+            
+        periods_calculated = len(schedule)
+        final_balance = schedule.iloc[-1]['Closing Balance'] if periods_calculated > 0 else principal
+
+        # LOGIC FIX: Explicitly check if duration is too long
+        if periods_calculated > target_periods:
+            # Took too long to pay off -> EMI is too Low
+            low = mid_emi
+        elif periods_calculated < target_periods:
+            # Paid off too early -> EMI is too High
+            high = mid_emi
+        else:
+            # Correct duration (periods == target)
+            if final_balance > 1.0: # Tolerance of 1 Rupee
+                # Still have significant balance at end -> EMI is too Low
+                low = mid_emi
+            else:
+                # Paid off exactly on time with 0 balance
+                best_emi = mid_emi
+                # We found a valid EMI, but we try to see if a slightly lower one also works
+                # (Standard binary search convergence)
+                high = mid_emi
+                 
+    return best_emi
+
+def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_date, rate_change_schedule, is_quarterly=False, fixed_initial_emi=None):
     rate_changes_sorted = sorted(rate_change_schedule, key=lambda x: x['date'])
-    initial_emi = calculate_emi(principal, initial_rate, tenure_months, is_quarterly)
+    
+    if fixed_initial_emi is not None:
+        initial_emi = fixed_initial_emi
+    else:
+        initial_emi = calculate_emi(principal, initial_rate, tenure_months, is_quarterly)
     
     current_date = start_date
     all_schedules = []
@@ -1100,15 +1153,24 @@ def main():
         
         try:
             with st.spinner("⚙️ Calculating your loan schedule..."):
+                # Calculate precise EMI to ensure tenure matches input
+                # This solves the "349 vs 360" months issue while keeping daily interest
+                initial_emi = calculate_precise_emi(
+                    principal, annual_rate, tenure_months, 
+                    start_datetime, is_quarterly
+                )
+                
                 if st.session_state.rate_changes:
                     schedule, emi = apply_multiple_rate_changes(
                         principal, annual_rate, tenure_months,
-                        start_datetime, st.session_state.rate_changes, is_quarterly
+                        start_datetime, st.session_state.rate_changes, is_quarterly,
+                        fixed_initial_emi=initial_emi
                     )
                 else:
                     schedule, emi = calculate_emi_schedule(
                         principal, annual_rate, tenure_months,
-                        start_datetime, is_quarterly=is_quarterly
+                        start_datetime, is_quarterly=is_quarterly,
+                        fixed_emi=initial_emi
                     )[:2]
                     
             period_count = f"{len(schedule)} {'quarters' if is_quarterly else 'months'}"
