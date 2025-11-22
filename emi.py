@@ -18,8 +18,8 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 def load_custom_css():
     st.markdown("""
         <style>
-        /* Import Google Fonts: Outfit (Modern Geometric) & Inter */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+        /* Import Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
         
         /* Global Reset & Body */
         html, body, [class*="css"] {
@@ -30,194 +30,178 @@ def load_custom_css():
         
         /* Headings */
         h1, h2, h3 {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Poppins', sans-serif;
             color: #0f172a; /* Slate-900 */
             font-weight: 700;
-            letter-spacing: -0.01em;
+            letter-spacing: -0.02em;
         }
         
-        /* Gradient Title for Main Header */
-        h1 {
-            background: linear-gradient(120deg, #2563eb, #7c3aed);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            padding-bottom: 0.2em; /* Prevent descender clipping */
-        }
-        
-        /* Main App Background */
+        /* Main App Background - Subtle Dot Pattern */
         .stApp {
-            background-color: #f8fafc;
-            /* Subtle mesh gradient background */
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,96%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,96%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,96%,1) 0, transparent 50%);
+            background-color: #f8fafc; /* Slate-50 */
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
         }
         
         /* Sidebar Styling */
         section[data-testid="stSidebar"] {
-            background-color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px); /* Glass effect */
-            border-right: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 4px 0 24px rgba(0,0,0,0.01);
+            background-color: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.02);
         }
         section[data-testid="stSidebar"] .block-container {
-            padding-top: 2rem;
+            padding-top: 3rem;
+        }
+        section[data-testid="stSidebar"] h1, 
+        section[data-testid="stSidebar"] h2, 
+        section[data-testid="stSidebar"] h3 {
+            color: #334155;
         }
         
-        /* Glassmorphism Metric Cards */
+        /* Card/Metric Styling - "Glass" effect on white */
         div[data-testid="stMetric"] {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
             padding: 24px;
-            box-shadow: 
-                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
-                0 10px 15px -3px rgba(0, 0, 0, 0.03),
-                inset 0 0 20px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
         
-        /* Card Hover Effect */
+        /* Hover effect for cards */
         div[data-testid="stMetric"]:hover {
-            transform: translateY(-5px) scale(1.01);
-            box-shadow: 
-                0 20px 25px -5px rgba(0, 0, 0, 0.1), 
-                0 10px 10px -5px rgba(0, 0, 0, 0.04),
-                inset 0 0 20px rgba(255, 255, 255, 0.8);
-            border-color: rgba(124, 58, 237, 0.3); /* Violet accent border */
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: #3b82f6; /* Blue-500 accent */
         }
         
         /* Metric Labels */
         div[data-testid="stMetricLabel"] {
-            color: #64748b;
-            font-size: 0.8rem;
+            color: #64748b; /* Slate-500 */
+            font-size: 0.85rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.05em;
         }
         
         /* Metric Values */
         div[data-testid="stMetricValue"] {
-            color: #1e293b;
+            color: #0f172a; /* Slate-900 */
             font-weight: 800;
-            font-size: 1.8rem;
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(120deg, #1e293b, #475569);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.75rem;
         }
         
-        /* Input Fields */
+        /* Input Fields Styling */
         .stTextInput input, .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: #ffffff;
             border: 1px solid #cbd5e1;
-            border-radius: 12px;
+            border-radius: 10px;
             color: #1e293b;
-            padding: 0.6rem;
-            transition: all 0.2s;
-            font-size: 0.95rem;
+            padding: 0.5rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
         
         .stTextInput input:focus, .stNumberInput input:focus, .stDateInput input:focus {
-            border-color: #7c3aed; /* Violet focus */
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
             outline: none;
         }
         
-        /* Modern Gradient Button */
+        /* Button Styling */
         .stButton > button {
-            border-radius: 12px;
+            border-radius: 10px;
             font-weight: 600;
-            font-family: 'Outfit', sans-serif;
-            padding: 0.6rem 1.4rem;
+            padding: 0.6rem 1.2rem;
             border: none;
-            transition: all 0.3s ease;
-            letter-spacing: 0.02em;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
         }
         
-        /* Primary Button (Calculate) - Vivid Gradient */
+        /* Primary Button (Calculate) */
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"] {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8); /* Royal Blue Gradient */
             color: white;
-            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
         }
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-            box-shadow: 0 15px 25px -5px rgba(79, 70, 229, 0.5);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.35);
+            transform: translateY(-1px);
         }
         
-        /* Secondary Button */
+        /* Secondary Button (Reset) */
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
             background-color: #ffffff;
-            border: 1px solid #fee2e2;
+            border: 1px solid #ef4444;
             color: #ef4444;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {
             background-color: #fef2f2;
-            border-color: #ef4444;
-            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
+            transform: translateY(-1px);
         }
         
-        /* Tabs styling */
+        /* Tabs */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 8px;
-            background-color: #f1f5f9;
-            padding: 4px;
-            border-radius: 16px;
-            border: none;
+            gap: 24px;
+            background-color: transparent;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0;
         }
         .stTabs [data-baseweb="tab"] {
-            height: 40px;
-            border-radius: 12px;
+            height: 48px;
             background-color: transparent;
             border: none;
             color: #64748b;
             font-weight: 600;
-            flex: 1; /* Distribute width */
+            font-size: 1rem;
+            padding: 0 4px;
         }
         .stTabs [aria-selected="true"] {
-            background-color: #ffffff;
-            color: #4f46e5; /* Indigo text */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            color: #2563eb; /* Blue-600 */
+            border-bottom: 2px solid #2563eb;
+            margin-bottom: -2px; /* Overlap border */
         }
         
-        /* Info Box Styling */
+        /* Expander */
+        .streamlit-expanderHeader {
+            background-color: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+            font-weight: 600;
+        }
+        
+        /* Info Box Custom Styling */
         .info-box {
-            background: linear-gradient(to right, #eff6ff, #ffffff);
-            padding: 20px 24px;
-            border-radius: 16px;
-            border: 1px solid #dbeafe;
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 12px;
             border-left: 6px solid #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             color: #334155;
             margin-bottom: 24px;
+            display: flex;
+            align-items: center;
         }
         
         /* DataFrame styling */
         div[data-testid="stDataFrame"] {
             border: 1px solid #e2e8f0;
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
         }
         
-        /* Expander styling */
-        .streamlit-expanderHeader {
-            background-color: #ffffff;
-            border-radius: 12px !important;
-            border: 1px solid #e2e8f0;
-            font-weight: 600;
-            font-family: 'Outfit', sans-serif;
+        /* Alerts/Success/Error messages */
+        div[data-baseweb="notification"] {
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
-        /* Hide Streamlit Menu */
+        /* Hide Streamlit Branding */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         </style>
