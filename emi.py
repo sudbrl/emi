@@ -120,21 +120,17 @@ def load_custom_css():
         }
         
         /* 1. MAIN AREA BUTTONS (Light Theme) */
-        
-        /* Calculate Button (Primary) */
         .block-container .stButton > button[kind="primary"] {
             background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
             color: white;
         }
         
-        /* Secondary Buttons in Main Area (Cancel, etc.) */
         .block-container .stButton > button:not([kind="primary"]) {
             background: white;
             border: 1px solid #ef4444;
             color: #ef4444;
         }
         
-        /* Download Buttons in Main Area (PDF/Excel/CSV) */
         .block-container .stDownloadButton > button {
             background: #f1f5f9;
             color: #334155;
@@ -147,33 +143,28 @@ def load_custom_css():
         }
 
         /* 2. SIDEBAR BUTTONS (Dark Theme Fixes) */
-        
-        /* FIX: Sidebar "Download Excel Template" Button */
         section[data-testid="stSidebar"] .stDownloadButton > button {
-            background-color: #334155 !important; /* Dark Slate */
-            color: #ffffff !important;             /* White Text */
+            background-color: #334155 !important;
+            color: #ffffff !important;
             border: 1px solid #475569 !important;
         }
         section[data-testid="stSidebar"] .stDownloadButton > button:hover {
-            background-color: #0d9488 !important; /* Teal on Hover */
+            background-color: #0d9488 !important;
             border-color: #0d9488 !important;
             color: white !important;
         }
         
-        /* FIX: Sidebar "Add Rate Change" / "Apply" Buttons */
         section[data-testid="stSidebar"] .stButton > button {
-            background-color: #334155 !important; /* Dark Slate */
-            color: #ffffff !important;             /* White Text */
+            background-color: #334155 !important;
+            color: #ffffff !important;
             border: 1px solid #475569 !important;
         }
         section[data-testid="stSidebar"] .stButton > button:hover {
-            background-color: #0d9488 !important; /* Teal on Hover */
+            background-color: #0d9488 !important;
             border-color: #0d9488 !important;
             color: white !important;
         }
 
-        /* ============================================= */
-        /* OTHER UI ELEMENTS */
         /* ============================================= */
         
         div[data-testid="stMetric"] {
@@ -202,7 +193,6 @@ def load_custom_css():
             margin-bottom: 1.5rem;
         }
         
-        /* Hide Streamlit Branding */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
@@ -456,6 +446,7 @@ def calculate_emi(principal, annual_rate, tenure_months, is_quarterly=False):
         return emi
 
 def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fixed_emi=None, start_month=1, max_payments=None, is_quarterly=False):
+    # Standard EMI for equal monthly installments
     if is_quarterly:
         rate_per_period = annual_rate / (4 * 100)
         tenure_periods = int(np.ceil(tenure_months / 3))
@@ -483,12 +474,12 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
     schedule = []
     balance = principal
     payment_label = "Quarterly" if is_quarterly else "EMI"
+    
     previous_payment_date = start_date
     
     for m in range(payments_to_make):
         if is_quarterly:
             payment_date = get_next_bs_quarter_end(previous_payment_date)
-            previous_payment_date = payment_date
         else:
             payment_date = payment_date_10th(start_date, m, is_quarterly=False)
             
@@ -499,13 +490,18 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             
         opening_balance = balance
         
-        if m == 0:
-            days_in_period = (payment_date - start_date).days
-            daily_rate = annual_rate / (365 * 100)
-            interest = balance * daily_rate * days_in_period
-        else:
-            interest = balance * rate_per_period
-            
+        # ---------------------------------------------------------
+        # CHANGED LOGIC: Daily Reducing Balance (Exact Days)
+        # ---------------------------------------------------------
+        days_in_period = (payment_date - previous_payment_date).days
+        
+        # Avoid division by zero or negative days if dates are messy
+        days_in_period = max(1, days_in_period) 
+        
+        # Daily Rate = Annual Rate / 365
+        interest = balance * (annual_rate / 100) * (days_in_period / 365)
+        # ---------------------------------------------------------
+        
         principal_paid = emi - interest
         
         is_theoretical_last_payment = (m == actual_tenure - 1)
@@ -523,6 +519,7 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             'Period': period_label,
             'Payment Date (AD)': payment_date.strftime('%Y-%m-%d'),
             'Payment Date (BS)': format_bs_date(bs_y, bs_m, bs_d),
+            'Days': days_in_period, # Added for clarity
             'Opening Balance': round(opening_balance, 2),
             payment_label: round(emi_paid, 2),
             'Interest': round(interest, 2),
@@ -532,6 +529,8 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
         })
         
         balance = closing_balance
+        previous_payment_date = payment_date # Update for next loop
+        
         if balance <= 0.0001:
             break
             
@@ -581,6 +580,7 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
         )
         
         if schedule is None:
+            # Fallback if EMI is too low
             periods_passed = current_month_index - 1
             months_passed = periods_passed * (3 if is_quarterly else 1)
             remaining_months = max(6, tenure_months - months_passed)
@@ -603,6 +603,16 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
             all_schedules.append(schedule)
             
             current_principal = schedule.iloc[-1]['Closing Balance']
+            # Update logic for next segment start date
+            seg_last_payment_date_str = schedule.iloc[-1]['Payment Date (AD)']
+            seg_last_payment_date = datetime.strptime(seg_last_payment_date_str, '%Y-%m-%d')
+            
+            # The next segment effectively starts from the last payment date
+            # Note: calculate_emi_schedule treats 'start_date' as the 'previous payment date'
+            # So for the next segment, we should use the last payment date of this segment as the start.
+            # However, the loop above uses 'seg_start' from the rate change list.
+            # We need to ensure continuity of dates. 
+            
             if is_quarterly:
                 current_month_index = int(schedule.iloc[-1]['Period'][1:]) + 1
             else:
@@ -765,13 +775,15 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     elements.append(Spacer(1, 12))
     
     payment_col = payment_label
-    schedule_data = [['Period', 'Date (AD)', 'Date (BS)', 'Opening', payment_label, 'Interest', 'Principal', 'Closing', 'Rate %']]
+    # Added 'Days' column to PDF for verification
+    schedule_data = [['Period', 'Date (AD)', 'Date (BS)', 'Days', 'Opening', payment_label, 'Interest', 'Principal', 'Closing', 'Rate %']]
     
     for _, row in schedule.iterrows():
         schedule_data.append([
             str(row['Period']),
             row['Payment Date (AD)'],
             row['Payment Date (BS)'],
+            str(row['Days']), # Added Days
             f"{row['Opening Balance']:,.0f}",
             f"{row[payment_col]:,.0f}",
             f"{row['Interest']:,.0f}",
@@ -780,7 +792,7 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
             f"{row['Interest Rate (%)']:.2f}"
         ])
         
-    col_widths = [0.4*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.9*inch, 0.5*inch]
+    col_widths = [0.4*inch, 0.8*inch, 0.8*inch, 0.4*inch, 0.8*inch, 0.8*inch, 0.7*inch, 0.8*inch, 0.9*inch, 0.5*inch]
     
     schedule_table = Table(schedule_data, colWidths=col_widths)
     schedule_table.setStyle(TableStyle([
@@ -943,7 +955,7 @@ def main():
     
     load_custom_css()
     
-    st.title("💰 Loan Repayment Planner")
+    st.title("💰 Premium Loan Repayment Planner")
     
     st.markdown("""
     <div class='info-box'>
