@@ -11,11 +11,145 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+# ============================================================================
+# VISUAL STYLING & CONFIG
+# ============================================================================
+def load_custom_css():
+    st.markdown("""
+        <style>
+        /* Import Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+        /* Global Settings */
+        html, body, [class*="css"] {
+            font-family: 'Inter', sans-serif;
+            color: #374151; /* Slightly darker gray for better readability */
+        }
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+            color: #1e293b; /* Darker indigo-gray for headers */
+            font-weight: 600;
+        }
+        /* App Background - Light Professional Gray */
+        .stApp {
+            background-color: #f8fafc; /* Softer light background */
+        }
+        /* Sidebar Styling */
+        section[data-testid="stSidebar"] {
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe); /* Gradient background */
+            border-right: 1px solid #94a3b8; /* Softer border color */
+        }
+        section[data-testid="stSidebar"] .block-container {
+            padding-top: 2rem;
+        }
+        /* Custom Card Styling for Metrics */
+        div[data-testid="stMetric"] {
+            background: linear-gradient(to bottom, #e0f2fe, #f0f9ff); /* Gradient background */
+            border: 1px solid #60a5fa; /* Stronger border color */
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease-in-out;
+        }
+        div[data-testid="stMetric"]:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px); /* Lift effect on hover */
+        }
+        div[data-testid="stMetricLabel"] {
+            color: #475569; /* Softer label color */
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        div[data-testid="stMetricValue"] {
+            color: #1e293b; /* Darker value color */
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        /* Inputs Styling */
+        .stTextInput input, .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
+            background-color: #ffffff;
+            border: 1px solid #94a3b8; /* Softer border */
+            border-radius: 8px;
+            color: #374151;
+        }
+        .stTextInput input:focus, .stNumberInput input:focus, .stDateInput input:focus {
+            border-color: #6364ff; /* Indigo focus color */
+            box-shadow: 0 0 0 2px rgba(99, 100, 255, 0.2); /* Indigo focus shadow */
+        }
+        /* Buttons */
+        .stButton > button {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border: none;
+            transition: all 0.2s;
+        }
+        /* Primary Action Button */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"] {
+            background: #0d9488; /* Teal primary color */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.3);
+        }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"]:hover {
+            background: #0f766e; /* Darker teal on hover */
+            box-shadow: 0 6px 8px -1px rgba(13, 148, 136, 0.4);
+            transform: translateY(-1px);
+        }
+        /* Secondary/Reset Button */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
+            background-color: #ffffff;
+            border: 1px solid #dc2626; /* Red border */
+            color: #dc2626; /* Red text */
+        }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {
+            background-color: #fef2f2; /* Light red background on hover */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+            background-color: transparent;
+            border-bottom: 1px solid #cbd5e1; /* Softer tab bottom border */
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 40px;
+            background-color: transparent;
+            border: none;
+            color: #64748b; /* Softer tab text color */
+            font-weight: 500;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #4f46e5; /* Indigo active tab */
+            color: #ffffff; /* White text for active tab */
+            border-bottom: 2px solid #4f46e5;
+        }
+        /* Expander */
+        .streamlit-expanderHeader {
+            background-color: #dbeafe; /* Light blue header */
+            border-radius: 8px;
+            border: 1px solid #94a3b8; /* Softer border */
+        }
+        /* Info Box Styling (custom class usage) */
+        .info-box {
+            background-color: #f0fdfa; /* Light teal background */
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #0d9488; /* Teal accent border */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            color: #1e293b; /* Darker text */
+            margin-bottom: 20px;
+        }
+        /* DataFrame */
+        [data-testid="stDataFrame"] {
+            border: 1px solid #94a3b8; /* Softer border */
+            border-radius: 8px;
+            background: white;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
 # ============================================================================
 # BS CALENDAR DATA (VERIFIED)
 # ============================================================================
-
 # Verified Data source for BS Calendar (2070-2099)
 BS_MONTHS = {
     2070: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
@@ -78,20 +212,8 @@ BS_MONTHS = {
     2127: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31],
     2128: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
     2129: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
-    2130: [31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30],
-    2131: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31],
-    2132: [31, 31, 31, 32, 31, 31, 30, 29, 30, 29, 30, 30],
-    2133: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
-    2134: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 30],
-    2135: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31],
-    2136: [31, 31, 31, 32, 31, 31, 30, 29, 30, 29, 30, 30],
-    2137: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
-    2138: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 30],
-    2139: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31],
-    2140: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30]
-  
+    2130: [31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30]
 }
-
 BS_REFERENCE_YEAR = 2070
 BS_REFERENCE_MONTH = 1
 BS_REFERENCE_DAY = 1
@@ -110,19 +232,17 @@ def get_nepal_time():
 def ad_to_bs(ad_date):
     if isinstance(ad_date, pd.Timestamp):
         ad_date = ad_date.to_pydatetime()
-    
     if isinstance(ad_date, date) and not isinstance(ad_date, datetime):
         ad_date = datetime.combine(ad_date, datetime.min.time())
-
     if isinstance(ad_date, datetime):
         ad_date = datetime(ad_date.year, ad_date.month, ad_date.day)
 
     delta = (ad_date - AD_REFERENCE_DATE).days
-    
+
     bs_year = BS_REFERENCE_YEAR
     bs_month = BS_REFERENCE_MONTH
     bs_day = BS_REFERENCE_DAY
-    
+
     if delta >= 0:
         bs_day += delta
         while True:
@@ -130,6 +250,7 @@ def ad_to_bs(ad_date):
                 return None, None, None
             month_days = BS_MONTHS[bs_year]
             days_in_month = month_days[bs_month - 1]
+
             if bs_day <= days_in_month:
                 break
             else:
@@ -155,19 +276,22 @@ def ad_to_bs(ad_date):
             else:
                 bs_day = prev_day
             delta -= 1
-            
+
     return bs_year, bs_month, bs_day
 
 def bs_to_ad(bs_year, bs_month, bs_day):
     if bs_year not in BS_MONTHS:
-        return datetime.now() 
+        return datetime.now() # Fallback if year not found
+
     days_diff = 0
     ref_tuple = (BS_REFERENCE_YEAR, BS_REFERENCE_MONTH, BS_REFERENCE_DAY)
     target_tuple = (bs_year, bs_month, bs_day)
-    
+
     if target_tuple == ref_tuple:
         return AD_REFERENCE_DATE
+
     if target_tuple > ref_tuple:
+        # Calculate days from reference date forward
         for y in range(BS_REFERENCE_YEAR, bs_year):
             days_diff += sum(BS_MONTHS[y])
         for m in range(1, bs_month):
@@ -175,6 +299,7 @@ def bs_to_ad(bs_year, bs_month, bs_day):
         days_diff += (bs_day - 1)
         return AD_REFERENCE_DATE + timedelta(days=days_diff)
     else:
+        # Calculate days backwards from reference date
         curr_y, curr_m, curr_d = BS_REFERENCE_YEAR, BS_REFERENCE_MONTH, BS_REFERENCE_DAY
         while (curr_y, curr_m, curr_d) > target_tuple:
             days_diff += 1
@@ -200,13 +325,12 @@ def add_months(date_obj, n_months):
     return datetime(year, month, min(day, last_day))
 
 def payment_date_10th(start_date, offset_months, is_quarterly=False):
-    # NOTE: This function is primarily used for EMI. 
-    # For Quarterly (EQI) in Nepal context, we use get_next_bs_quarter_end instead.
     months_to_add = offset_months * 3 if is_quarterly else offset_months
     if start_date.day <= 10:
         first_payment_base = start_date.replace(day=10)
     else:
         first_payment_base = add_months(start_date.replace(day=1), 1).replace(day=10)
+
     pd_date = add_months(first_payment_base, months_to_add)
     last_day = calendar.monthrange(pd_date.year, pd_date.month)[1]
     d = min(10, last_day)
@@ -218,10 +342,8 @@ def get_next_bs_quarter_end(from_date_ad):
     Quarter ends are the last days of BS Months 3 (Ashad), 6 (Ashwin), 9 (Poush), 12 (Chaitra).
     """
     bs_y, bs_m, bs_d = ad_to_bs(from_date_ad)
-    
     if bs_y is None: return from_date_ad + timedelta(days=90) # Fallback
-    
-    # Determine target BS month
+
     if bs_m < 3:
         target_m = 3
         target_y = bs_y
@@ -235,39 +357,32 @@ def get_next_bs_quarter_end(from_date_ad):
         target_m = 12
         target_y = bs_y
     else:
-        # Currently in Month 12, next quarter end is Month 3 of next year
         target_m = 3
         target_y = bs_y + 1
-        
-    # Get last day of that target month
-    if target_y not in BS_MONTHS: 
-        return from_date_ad + timedelta(days=90) # Fallback
-        
+
+    if target_y not in BS_MONTHS: # Fallback if year not found
+        return from_date_ad + timedelta(days=90)
+
     target_d = BS_MONTHS[target_y][target_m - 1]
-    
     target_ad = bs_to_ad(target_y, target_m, target_d)
-    
-    # Ensure target is in future. If today is exactly the quarter end, we likely want the NEXT one.
-    # Or if calculation resulted in a past date (unlikely with logic above unless dates are mixed), move forward.
+
+    # If calculated date is not strictly after the input date, find the next one
     if target_ad <= from_date_ad:
-        # Recurse starting from tomorrow to find the next valid quarter end
+        # Add a day to the input date and recurse
         return get_next_bs_quarter_end(from_date_ad + timedelta(days=1))
-        
+
     return target_ad
 
 def count_payments_between(segment_start_date, segment_end_date, is_quarterly=False, max_check=5000):
     count = 0
     current_marker_date = segment_start_date
-    
     for off in range(max_check):
         if is_quarterly:
-            # For quarterly, we jump from one BS quarter end to the next
             pd_date = get_next_bs_quarter_end(current_marker_date)
-            current_marker_date = pd_date # Advance the marker
+            current_marker_date = pd_date # Update for next quarter calculation
         else:
-            # For EMI, we use the standard 10th of the month logic
             pd_date = payment_date_10th(segment_start_date, off, is_quarterly=False)
-            
+
         if pd_date < segment_end_date:
             count += 1
         else:
@@ -302,14 +417,13 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
     else:
         rate_per_period = annual_rate / (12 * 100)
         tenure_periods = tenure_months
-    
+
     if fixed_emi is not None:
         if rate_per_period == 0:
             actual_tenure = int(np.ceil(principal / fixed_emi))
         else:
-            # If EMI is less than interest, this calculation fails (negative log).
-            # We return None to signal that EMI must be increased.
             if fixed_emi <= principal * rate_per_period:
+                 # If EMI is less than first interest, it's invalid
                 return None, None, None
             actual_tenure = int(np.ceil(
                 np.log(fixed_emi / (fixed_emi - principal * rate_per_period)) /
@@ -326,17 +440,12 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
     balance = principal
     payment_label = "Quarterly" if is_quarterly else "EMI"
 
-    # Track previous payment date for BS Quarter Logic
-    previous_payment_date = start_date
-
+    previous_payment_date = start_date # For quarterly payments
     for m in range(payments_to_make):
-        # Determine Payment Date
         if is_quarterly:
-            # EQI: Finds next BS Quarter End (End of Ashad, Ashwin, Poush, Chaitra)
             payment_date = get_next_bs_quarter_end(previous_payment_date)
             previous_payment_date = payment_date # Update for next iteration
         else:
-            # EMI: Standard 10th of month logic
             payment_date = payment_date_10th(start_date, m, is_quarterly=False)
 
         try:
@@ -345,20 +454,28 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             bs_y, bs_m, bs_d = None, None, None
 
         opening_balance = balance
-        interest = balance * rate_per_period
-        principal_paid = emi - interest
 
+        # Calculate interest based on actual days for first payment
+        if m == 0:
+            days_in_period = (payment_date - start_date).days
+            daily_rate = annual_rate / (365 * 100)
+            interest = balance * daily_rate * days_in_period
+        else:
+            interest = balance * rate_per_period # Use period rate for subsequent payments
+
+        principal_paid = emi - interest
         is_theoretical_last_payment = (m == actual_tenure - 1)
+
         if principal_paid >= balance or is_theoretical_last_payment:
+            # Last payment scenario
             principal_paid = balance
             emi_paid = balance + interest
         else:
             emi_paid = emi
 
         closing_balance = balance - principal_paid
-
         period_label = f"Q{start_month + m}" if is_quarterly else str(start_month + m)
-        
+
         schedule.append({
             'Period': period_label,
             'Payment Date (AD)': payment_date.strftime('%Y-%m-%d'),
@@ -372,13 +489,15 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
         })
 
         balance = closing_balance
-        if balance <= 0.0001:
+        if balance <= 0.0001: # Small tolerance to handle floating point errors
             break
 
     return pd.DataFrame(schedule), emi, actual_tenure
 
 def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_date, rate_change_schedule, is_quarterly=False):
     rate_changes_sorted = sorted(rate_change_schedule, key=lambda x: x['date'])
+
+    # Calculate initial EMI based on original terms
     initial_emi = calculate_emi(principal, initial_rate, tenure_months, is_quarterly)
 
     current_date = start_date
@@ -386,61 +505,60 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
     current_principal = principal
     current_month_index = 1
 
+    # Prepare a list of changes including the initial rate
     full_changes = []
     full_changes.append({'date': start_date, 'rate': initial_rate})
-    
     for ch in rate_changes_sorted:
         if ch['date'] <= start_date:
+             # If a change date is before or on start date, update the initial rate
             full_changes[0] = {'date': start_date, 'rate': ch['rate']}
         else:
             full_changes.append(ch)
 
+    # Iterate through each segment defined by rate changes
     for i in range(len(full_changes)):
         seg_start = full_changes[i]['date']
         seg_rate = full_changes[i]['rate']
+
+        # Determine the end of the current segment
         if i < len(full_changes) - 1:
             seg_end = full_changes[i + 1]['date']
             months_in_segment = count_payments_between(seg_start, seg_end, is_quarterly)
         else:
+            # No further changes, continue for the remaining tenure
             months_in_segment = None
 
+        # Handle case where segment is very short (e.g., 0 months)
         if months_in_segment == 0:
             current_date = full_changes[i]['date']
             continue
 
-        # Try with fixed_emi = initial_emi (User preference: Fixed EMI, Floating Tenure)
+        # Calculate schedule for the current segment
         schedule, emi_used, theoretical_tenure = calculate_emi_schedule(
             current_principal,
             seg_rate,
-            tenure_months,
+            tenure_months, # Use original tenure as baseline
             seg_start,
-            fixed_emi=initial_emi,
+            fixed_emi=initial_emi, # Use the initial EMI calculated at the start
             start_month=current_month_index,
             max_payments=months_in_segment,
             is_quarterly=is_quarterly
         )
 
-        # FIX: Handle case where Interest > EMI (returns None)
+        # Handle potential error in schedule calculation (e.g., EMI too low for new rate)
         if schedule is None:
-            # EMI is too small to cover interest. We MUST increase EMI.
-            # Calculate remaining tenure based on original plan to get back on track
+            # Recalculate EMI based on current principal, new rate, and remaining tenure
             periods_passed = current_month_index - 1
             months_passed = periods_passed * (3 if is_quarterly else 1)
-            
-            # Calculate remaining months, ensure minimum of 6 months to prevent crazy spikes
-            remaining_months = max(6, tenure_months - months_passed)
-            
-            # Recalculate EMI for this new rate and remaining tenure
+            remaining_months = max(6, tenure_months - months_passed) # Ensure at least 6 months
             new_emi = calculate_emi(current_principal, seg_rate, remaining_months, is_quarterly)
-            
-            # Update initial_emi to this new higher value for subsequent segments
-            initial_emi = new_emi
-            
-            # Retry schedule calculation
+            initial_emi = new_emi # Update initial_emi to use for future segments
+
+            # Recalculate schedule with the new EMI
             schedule, emi_used, theoretical_tenure = calculate_emi_schedule(
                 current_principal,
                 seg_rate,
-                tenure_months,
+                tenure_months, # Use original tenure as baseline
                 seg_start,
                 fixed_emi=initial_emi,
                 start_month=current_month_index,
@@ -448,31 +566,29 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
                 is_quarterly=is_quarterly
             )
 
+        # Append the calculated segment to the full schedule
         if len(schedule) > 0:
             all_schedules.append(schedule)
+            # Update state for the next segment
             current_principal = schedule.iloc[-1]['Closing Balance']
             if is_quarterly:
-                current_month_index = int(schedule.iloc[-1]['Period'][1:]) + 1
-                # Update seg_start for next loop to be the last payment date, ensuring continuity
-                # Actually, the loop variable seg_start comes from rate changes.
-                # But calculate_emi_schedule needs the correct 'previous date' context.
-                # Because we pass 'seg_start' as 'start_date' to calculate_emi_schedule,
-                # and calculate_emi_schedule uses that to find the *next* quarter end,
-                # we must ensure continuity is respected implicitly by the rate change date.
+                current_month_index = int(schedule.iloc[-1]['Period'][1:]) + 1 # Extract quarter number (QX)
             else:
                 current_month_index = int(schedule.iloc[-1]['Period']) + 1
 
-        if months_in_segment is None:
-            break
+        # Exit loop if loan is fully paid off
+        if months_in_segment is None: # If no further changes planned
+            if current_principal <= 0.01: # Check if loan is essentially paid off
+                break
 
-        if current_principal <= 0.01:
-            break
-
+    # Combine all segments into a single DataFrame
     if all_schedules:
         combined = pd.concat(all_schedules, ignore_index=True)
-        return combined, initial_emi
+        return combined, initial_emi # Return combined schedule and the (potentially updated) initial_emi
+    else:
+        # Fallback if no segments were calculated (should not happen if logic is correct)
+        return calculate_emi_schedule(principal, initial_rate, tenure_months, start_date, is_quarterly=is_quarterly)[:2]
 
-    return calculate_emi_schedule(principal, initial_rate, tenure_months, start_date, is_quarterly=is_quarterly)[:2]
 
 # ============================================================================
 # EXPORT FUNCTIONS
@@ -489,6 +605,7 @@ def create_excel_template():
         df.to_excel(writer, sheet_name='Rate Changes', index=False)
         workbook = writer.book
         worksheet = writer.sheets['Rate Changes']
+
         instructions = pd.DataFrame({
             'Instructions': [
                 '1. Enter dates in the "Date" column in YYYY-MM-DD format (e.g., 2025-12-10)',
@@ -499,8 +616,12 @@ def create_excel_template():
             ]
         })
         instructions.to_excel(writer, sheet_name='Instructions', index=False)
+
+        # Adjust column widths
         worksheet.column_dimensions['A'].width = 20
         worksheet.column_dimensions['B'].width = 15
+
+        # Apply formatting to headers
         from openpyxl.styles import Font, PatternFill, Alignment
         header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
         header_font = Font(color="FFFFFF", bold=True)
@@ -508,63 +629,92 @@ def create_excel_template():
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = Alignment(horizontal='center')
+
     output.seek(0)
     return output
 
 def parse_excel_rate_changes(uploaded_file):
     try:
         df = pd.read_excel(uploaded_file, sheet_name='Rate Changes')
-        df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.strip() # Clean column names
+
         date_col = None
         rate_col = None
+        # Find Date column
         if 'Date' in df.columns: date_col = 'Date'
         elif 'date' in df.columns: date_col = 'date'
         else:
             for col in df.columns:
                 if 'date' in col.lower(): date_col = col; break
-        
+        # Find Rate column
         if 'Rate' in df.columns: rate_col = 'Rate'
         elif 'rate' in df.columns: rate_col = 'rate'
         else:
             for col in df.columns:
                 if 'rate' in col.lower(): rate_col = col; break
-        
+
         if not date_col or not rate_col:
             return None, "Excel file must have 'Date' and 'Rate' columns"
-        
+
         rate_changes = []
         errors = []
         for idx, row in df.iterrows():
+            # Skip rows where both date and rate are empty
             if pd.isna(row[date_col]) and pd.isna(row[rate_col]): continue
+            # Error if one is empty and the other isn't
             if pd.isna(row[date_col]) or pd.isna(row[rate_col]):
                 errors.append(f"Row {idx + 2}: Missing date or rate"); continue
+
             try:
+                # Parse date - try common formats first, then fallback to pandas
                 if isinstance(row[date_col], str):
                     for fmt in ['%Y-%m-%d', '%Y/%m/%d', '%d-%m-%Y', '%d/%m/%Y']:
-                        try: change_dt = datetime.strptime(row[date_col], fmt); break
-                        except ValueError: continue
-                    else: change_dt = pd.to_datetime(row[date_col]).to_pydatetime()
-                else: change_dt = pd.to_datetime(row[date_col]).to_pydatetime()
+                        try:
+                            change_dt = datetime.strptime(row[date_col], fmt)
+                            break
+                        except ValueError:
+                            continue
+                    else: # If none of the common formats work, use pandas
+                        change_dt = pd.to_datetime(row[date_col]).to_pydatetime()
+                else: # Assume it's already a pandas datetime object
+                    change_dt = pd.to_datetime(row[date_col]).to_pydatetime()
+
                 rate_val = float(row[rate_col])
-                if rate_val < 0 or rate_val > 100:
-                    errors.append(f"Row {idx + 2}: Rate {rate_val} is out of valid range"); continue
+                if rate_val < 0 or rate_val > 100: # Validate rate range
+                    errors.append(f"Row {idx + 2}: Rate {rate_val} is out of valid range (0-100)"); continue
+
                 rate_changes.append({'date': change_dt, 'rate': rate_val})
-            except Exception as e: errors.append(f"Row {idx + 2}: {str(e)}")
-        
-        if not rate_changes and errors: return None, "No valid rate changes found. Errors: " + "; ".join(errors)
+            except Exception as e:
+                errors.append(f"Row {idx + 2}: {str(e)}")
+
+        if not rate_changes and errors:
+            return None, "No valid rate changes found. Errors: " + "; ".join(errors)
+
         return rate_changes, errors if errors else None
-    except Exception as e: return None, f"Error reading Excel file: {str(e)}"
+    except Exception as e:
+        return None, f"Error reading Excel file: {str(e)}"
 
 def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure_months, is_quarterly=False):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
     elements = []
+
     styles = getSampleStyleSheet()
     payment_label = "Quarterly" if is_quarterly else "EMI"
-    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=24, textColor=colors.HexColor('#1f77b4'), spaceAfter=30, alignment=TA_CENTER)
+
+    # Title
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#1f77b4'),
+        spaceAfter=30,
+        alignment=TA_CENTER
+    )
     elements.append(Paragraph(f"{payment_label} Calculator Report", title_style))
     elements.append(Spacer(1, 12))
-    
+
+    # Summary Table
     summary_data = [
         ['Loan Summary', ''],
         ['Loan Amount:', f'Rs. {principal:,.2f}'],
@@ -586,20 +736,29 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     ]))
     elements.append(summary_table)
     elements.append(Spacer(1, 20))
-    elements.append(PageBreak())
-    
+    elements.append(PageBreak()) # Start a new page for the schedule
+
+    # Schedule Table
     elements.append(Paragraph("Payment Schedule", styles['Heading2']))
     elements.append(Spacer(1, 12))
-    
+
     payment_col = payment_label
     schedule_data = [['Period', 'Date (AD)', 'Date (BS)', 'Opening', payment_label, 'Interest', 'Principal', 'Closing', 'Rate %']]
     for _, row in schedule.iterrows():
         schedule_data.append([
-            str(row['Period']), row['Payment Date (AD)'], row['Payment Date (BS)'],
-            f"{row['Opening Balance']:,.0f}", f"{row[payment_col]:,.0f}", f"{row['Interest']:,.0f}",
-            f"{row['Principal']:,.0f}", f"{row['Closing Balance']:,.0f}", f"{row['Interest Rate (%)']:.2f}"
+            str(row['Period']),
+            row['Payment Date (AD)'],
+            row['Payment Date (BS)'],
+            f"{row['Opening Balance']:,.0f}",
+            f"{row[payment_col]:,.0f}",
+            f"{row['Interest']:,.0f}",
+            f"{row['Principal']:,.0f}",
+            f"{row['Closing Balance']:,.0f}",
+            f"{row['Interest Rate (%)']:.2f}"
         ])
-    schedule_table = Table(schedule_data, colWidths=[0.4*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.9*inch, 0.5*inch])
+    # Calculate column widths dynamically based on content or set fixed widths
+    col_widths = [0.4*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.9*inch, 0.5*inch]
+    schedule_table = Table(schedule_data, colWidths=col_widths)
     schedule_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -610,148 +769,262 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
         ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey])
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]) # Alternating row colors
     ]))
     elements.append(schedule_table)
+
     doc.build(elements)
     buffer.seek(0)
     return buffer
 
 def create_balance_chart(schedule):
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=schedule.index+1, y=schedule['Closing Balance'], mode='lines', fill='tozeroy', name='Outstanding Balance', line=dict(width=3), text=schedule['Period'], hovertemplate='Period: %{text}<br>Balance: Rs. %{y:,.0f}<extra></extra>'))
-    fig.update_layout(title='Loan Balance Over Time', xaxis_title='Payment Period', yaxis_title='Outstanding Balance (Rs.)', height=350, hovermode='x unified')
+    fig.add_trace(go.Scatter(
+        x=schedule.index+1,
+        y=schedule['Closing Balance'],
+        mode='lines',
+        fill='tozeroy',
+        name='Outstanding Balance',
+        line=dict(width=3, color='#6364ff'), # Indigo color
+        text=schedule['Period'],
+        hovertemplate='Period: %{text}<br>Balance: Rs. %{y:,.0f}<extra></extra>'
+    ))
+    fig.update_layout(
+        title='Loan Balance Over Time',
+        xaxis_title='Payment Period',
+        yaxis_title='Outstanding Balance (Rs.)',
+        height=350,
+        hovermode='x unified',
+        template='plotly_white',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family="Inter, sans-serif", color="#374151"),
+        title_font=dict(family="Poppins, sans-serif", size=16, color="#111827"),
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
     return fig
 
 def create_principal_interest_chart(schedule, is_quarterly=False):
     payment_label = "Quarterly" if is_quarterly else "EMI"
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=schedule.index+1, y=schedule['Principal'], name='Principal', text=schedule['Period'], hovertemplate='Period: %{text}<br>Principal: Rs. %{y:,.0f}<extra></extra>'))
-    fig.add_trace(go.Bar(x=schedule.index+1, y=schedule['Interest'], name='Interest', text=schedule['Period'], hovertemplate='Period: %{text}<br>Interest: Rs. %{y:,.0f}<extra></extra>'))
-    fig.update_layout(title=f'{payment_label} Breakdown: Principal vs Interest', xaxis_title='Payment Period', yaxis_title='Amount (Rs.)', barmode='stack', height=350, hovermode='x unified')
+    fig.add_trace(go.Bar(
+        x=schedule.index+1,
+        y=schedule['Principal'],
+        name='Principal',
+        marker_color='#0d9488', # Teal color
+        text=schedule['Period'],
+        hovertemplate='Period: %{text}<br>Principal: Rs. %{y:,.0f}<extra></extra>'
+    ))
+    fig.add_trace(go.Bar(
+        x=schedule.index+1,
+        y=schedule['Interest'],
+        name='Interest',
+        marker_color='#f59e0b', # Amber color
+        text=schedule['Period'],
+        hovertemplate='Period: %{text}<br>Interest: Rs. %{y:,.0f}<extra></extra>'
+    ))
+    fig.update_layout(
+        title=f'{payment_label} Breakdown: Principal vs Interest',
+        xaxis_title='Payment Period',
+        yaxis_title='Amount (Rs.)',
+        barmode='stack',
+        height=350,
+        hovermode='x unified',
+        template='plotly_white',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family="Inter, sans-serif", color="#374151"),
+        title_font=dict(family="Poppins, sans-serif", size=16, color="#111827"),
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
     return fig
 
 def create_pie_chart(schedule):
-    total_principal = schedule['Principal'].sum(); total_interest = schedule['Interest'].sum()
-    fig = go.Figure(data=[go.Pie(labels=['Principal', 'Interest'], values=[total_principal, total_interest], hole=0.4, textinfo='label+percent+value', texttemplate='<b>%{label}</b><br>%{percent}<br>Rs. %{value:,.0f}')])
-    fig.update_layout(title='Total Payment Composition', height=350)
+    total_principal = schedule['Principal'].sum()
+    total_interest = schedule['Interest'].sum()
+    fig = go.Figure(data=[go.Pie(
+        labels=['Principal', 'Interest'],
+        values=[total_principal, total_interest],
+        hole=0.6,
+        textinfo='label+percent',
+        marker=dict(colors=['#0d9488', '#f59e0b']), # Teal and Amber
+        texttemplate='<b>%{label}</b><br>%{percent}<br>Rs. %{value:,.0f}'
+    )])
+    fig.update_layout(
+        title='Total Payment Composition',
+        height=350,
+        template='plotly_white',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family="Inter, sans-serif", color="#374151"),
+        title_font=dict(family="Poppins, sans-serif", size=16, color="#111827"),
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
     return fig
 
 def create_interest_rate_timeline(schedule):
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=schedule.index+1, y=schedule['Interest Rate (%)'], mode='lines+markers', name='Interest Rate', line=dict(width=3, shape='hv'), text=schedule['Period'], hovertemplate='Period: %{text}<br>Rate: %{y:.2f}%<extra></extra>'))
-    fig.update_layout(title='Interest Rate Changes Over Time', xaxis_title='Payment Period', yaxis_title='Interest Rate (%)', height=350, hovermode='x unified')
+    fig.add_trace(go.Scatter(
+        x=schedule.index+1,
+        y=schedule['Interest Rate (%)'],
+        mode='lines+markers',
+        name='Interest Rate',
+        line=dict(width=3, shape='hv', color='#f59e0b'), # Amber color
+        text=schedule['Period'],
+        hovertemplate='Period: %{text}<br>Rate: %{y:.2f}%<extra></extra>'
+    ))
+    fig.update_layout(
+        title='Interest Rate Changes Over Time',
+        xaxis_title='Payment Period',
+        yaxis_title='Interest Rate (%)',
+        height=350,
+        hovermode='x unified',
+        template='plotly_white',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family="Inter, sans-serif", color="#374151"),
+        title_font=dict(family="Poppins, sans-serif", size=16, color="#111827"),
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
     return fig
 
 # ============================================================================
 # STREAMLIT APP
 # ============================================================================
+
 def init_session_state():
-    if 'rate_changes' not in st.session_state: st.session_state.rate_changes = []
-    if 'upload_key' not in st.session_state: st.session_state.upload_key = 0
-    if 'calculated' not in st.session_state: st.session_state.calculated = False
+    if 'rate_changes' not in st.session_state:
+        st.session_state.rate_changes = []
+    if 'upload_key' not in st.session_state:
+        st.session_state.upload_key = 0
+    if 'calculated' not in st.session_state:
+        st.session_state.calculated = False
 
 init_session_state()
 
 def main():
-    # Set sidebar to be expanded by default
-    st.set_page_config(page_title="Dynamic EMI/Quarterly Calculator", page_icon="💰", layout="wide", initial_sidebar_state="expanded")
-    
-    # FIX: Removed 'header {visibility: hidden;}' so the sidebar toggle button (arrow) stays visible
+    st.set_page_config(
+        page_title="Dynamic EMI/EQI Calculator",
+        page_icon="💰",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    load_custom_css()
+
     hide_streamlit_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;}</style>"""
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-    st.title("Dynamic EMI/Quarterly Calculator")
-    
-    payment_freq = st.radio("Payment Frequency", ["EMI (Monthly)", "Quarterly"], horizontal=True)
+
+    st.title("💰 Loan Repayment Planner")
+    st.markdown("""
+    <div class='info-box'>
+        <p style='margin:0; font-size: 1.05rem;'>
+        Select your payment frequency below. This calculator supports <strong>rate changes</strong> during the loan tenure.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_freq, col_info = st.columns([1, 2])
+    with col_freq:
+        payment_freq = st.radio("Payment Frequency", ["EMI (Monthly)", "Quarterly"], horizontal=True)
     is_quarterly = (payment_freq == "Quarterly")
-    
-    if is_quarterly:
-        st.markdown(f"Payments are scheduled on **BS Quarter Ends** (Ashad, Ashwin, Poush, Chaitra).")
-    else:
-        st.markdown(f"Payments are scheduled on the **10th** of each AD month.")
+    with col_info:
+        if is_quarterly:
+            st.info("📅 Payments aligned to **BS Quarter Ends** (Ashad, Ashwin, Poush, Chaitra).")
+        else:
+            st.info("📅 Payments scheduled on the **10th** of each AD month.")
+
     st.divider()
 
     with st.sidebar:
-        st.header("🏦 Loan Parameters")
+        st.header("🧾 Loan Parameters")
+        st.markdown("---")
         principal = st.number_input("Loan Amount (Rs.)", min_value=10000, max_value=100000000, value=1000000, step=10000)
         annual_rate = st.number_input("Initial Annual Interest Rate (%)", min_value=0.0, max_value=30.0, value=12.0, step=0.1, format="%.2f")
         tenure_months = st.number_input("Loan Tenure (Months)", min_value=1, max_value=360, value=60, step=1)
-        date_format = st.radio("Start Date Format", ["AD", "BS"], horizontal=True)
-        nepal_today = get_nepal_time()
 
+        st.markdown("### Start Date")
+        date_format = st.radio("Date Format", ["AD", "BS"], horizontal=True)
+        nepal_today = get_nepal_time()
         if date_format == "AD":
             start_date = st.date_input("Loan Start Date (AD)", value=nepal_today)
             start_datetime = datetime.combine(start_date, datetime.min.time())
         else:
             today_bs_y, today_bs_m, today_bs_d = ad_to_bs(nepal_today)
             col1, col2, col3 = st.columns(3)
-            with col1: bs_year = st.number_input("Year (BS)", min_value=2000, max_value=2090, value=today_bs_y if today_bs_y else 2081, step=1)
+            with col1: bs_year = st.number_input("Year", min_value=2000, max_value=2090, value=today_bs_y if today_bs_y else 2081, step=1)
             with col2: bs_month = st.number_input("Month", min_value=1, max_value=12, value=today_bs_m if today_bs_m else 1, step=1)
             with col3: bs_day = st.number_input("Day", min_value=1, max_value=32, value=today_bs_d if today_bs_d else 1, step=1)
-            try: start_datetime = bs_to_ad(bs_year, bs_month, bs_day); st.caption(f"AD: {start_datetime.strftime('%Y-%m-%d')}")
-            except Exception as e: st.error(f"Could not convert BS → AD: {e}"); start_datetime = datetime.now()
+            try:
+                start_datetime = bs_to_ad(bs_year, bs_month, bs_day)
+                st.caption(f"AD: {start_datetime.strftime('%Y-%m-%d')}")
+            except Exception as e:
+                st.error(f"Could not convert BS -> AD: {e}")
+                start_datetime = datetime.now()
 
-        st.divider()
+        st.markdown("---")
         st.subheader("🔄 Interest Rate Changes")
-        st.caption("Add future rate changes in AD format")
+        st.caption("Adjust for floating interest rates over time.")
         template_excel = create_excel_template()
-        st.download_button(label="📥 Download Excel Template", data=template_excel, file_name="rate_changes_template.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
+        st.download_button(label="📥 Download Template", data=template_excel, file_name="rate_changes_template.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
 
-        with st.expander("📤 Upload Rate Changes (Excel)", expanded=False):
-            st.info("📋 Upload the Excel template with 'Date' and 'Rate' columns")
-            uploaded_file = st.file_uploader("Choose Excel file", type=['xlsx', 'xls'], key=f"file_uploader_{st.session_state.upload_key}")
+        with st.expander("📁 Upload Excel", expanded=False):
+            st.info("Template required: 'Date' and 'Rate' columns.")
+            uploaded_file = st.file_uploader("Choose File", type=['xlsx', 'xls'], key=f"file_uploader_{st.session_state.upload_key}")
             if uploaded_file is not None:
-                with st.spinner("Processing Excel file..."):
+                with st.spinner("Processing..."):
                     rate_changes, errors = parse_excel_rate_changes(uploaded_file)
                     if rate_changes:
-                        st.success(f"✅ Found {len(rate_changes)} rate change(s)")
-                        preview_df = pd.DataFrame(rate_changes); preview_df['date'] = preview_df['date'].dt.strftime('%Y-%m-%d')
-                        st.dataframe(preview_df, use_container_width=True)
-                        if errors:
-                            with st.expander("⚠️ Warnings", expanded=False):
-                                for error in errors: st.warning(error)
+                        st.success(f"✅ Found {len(rate_changes)} changes")
                         col1, col2 = st.columns(2)
                         with col1:
-                            if st.button("✅ Apply Changes", use_container_width=True):
-                                st.session_state.rate_changes = rate_changes; st.session_state.upload_key += 1; st.success("Rate changes applied!"); st.rerun()
+                             if st.button("Apply", use_container_width=True):
+                                st.session_state.rate_changes = rate_changes
+                                st.session_state.upload_key += 1 # Reset uploader key to clear file
+                                st.success("Applied!")
+                                st.rerun() # Rerun to update sidebar display
                         with col2:
-                            if st.button("❌ Cancel", use_container_width=True):
-                                st.session_state.upload_key += 1; st.rerun()
-                    else: st.error(f"❌ {errors}")
+                             if st.button("Cancel", use_container_width=True):
+                                st.session_state.upload_key += 1 # Reset uploader key to clear file
+                                st.rerun() # Rerun to clear the upload area
+                    else:
+                        st.error(f"❌ {errors}")
 
-        with st.expander("➕ Add Rate Change Manually"):
-            change_date = st.date_input("Change Date (AD)", value=(nepal_today + timedelta(days=365)))
+        with st.expander("✏️ Add Manually"):
+            change_date = st.date_input("Date (AD)", value=(nepal_today + timedelta(days=365)))
             change_datetime = datetime.combine(change_date, datetime.min.time())
             new_rate = st.number_input("New Rate (%)", min_value=0.0, max_value=30.0, value=13.0, step=0.1, format="%.2f")
-            if st.button("Add Rate Change", use_container_width=True):
-                st.session_state.rate_changes.append({'date': change_datetime, 'rate': new_rate}); st.success("Rate change added!"); st.rerun()
+            if st.button("Add Rate", use_container_width=True):
+                st.session_state.rate_changes.append({'date': change_datetime, 'rate': new_rate})
+                st.success("Added!")
+                st.rerun() # Rerun to update sidebar display
 
         if st.session_state.rate_changes:
-            st.write("**Scheduled Rate Changes:**")
+            st.markdown("**Scheduled Changes:**")
             sorted_changes = sorted(st.session_state.rate_changes, key=lambda x: x['date'])
             for idx, change in enumerate(sorted_changes):
+                # Find the original index in the session state list to ensure correct deletion
                 orig_idx = st.session_state.rate_changes.index(change)
                 col1, col2 = st.columns([4, 1])
-                with col1: st.write(f"📅 {change['date'].strftime('%Y-%m-%d')}: **{change['rate']:.2f}%**")
+                with col1:
+                    st.write(f"📅 {change['date'].strftime('%Y-%m-%d')}: **{change['rate']:.2f}%**")
                 with col2:
-                    if st.button("🗑️", key=f"del_{orig_idx}_{idx}"): st.session_state.rate_changes.pop(orig_idx); st.rerun()
+                    if st.button("❌", key=f"del_{orig_idx}_{idx}"): # Use unique key
+                        st.session_state.rate_changes.pop(orig_idx)
+                        st.rerun() # Rerun to update sidebar display
 
-    # --- MAIN ACTION BUTTONS (Outside Sidebar) ---
-    # Placed here so they are visible even if sidebar is closed
-    # Adjusted columns to [1, 1, 3] to reduce the width of the buttons
+
     action_col1, action_col2, _ = st.columns([1, 1, 3])
     with action_col1:
-        calculate_btn = st.button("📊 Calculate Schedule", type="primary", use_container_width=True)
+        calculate_btn = st.button("🧮 Calculate Schedule", type="primary", use_container_width=True)
     with action_col2:
         if st.session_state.rate_changes:
-            if st.button("🔄 Reset Rates", use_container_width=True): 
+            if st.button("🔄 Reset Rates", use_container_width=True):
                 st.session_state.rate_changes = []
                 st.rerun()
 
     if calculate_btn:
         st.session_state.calculated = True
 
-    # --- RESULTS DISPLAY (Persisted via Session State) ---
     if st.session_state.calculated:
         period_label = "Quarterly" if is_quarterly else "EMI"
         try:
@@ -761,48 +1034,88 @@ def main():
                 schedule, emi = calculate_emi_schedule(principal, annual_rate, tenure_months, start_datetime, is_quarterly=is_quarterly)[:2]
 
             period_count = f"{len(schedule)} {'quarters' if is_quarterly else 'months'}"
+
+            st.markdown("### Loan Summary")
             col1, col2, col3, col4 = st.columns(4)
-            with col1: st.metric(period_label, f"Rs. {emi:,.2f}")
-            with col2: payment_col = period_label; total_payment = schedule[payment_col].sum(); st.metric("Total Payment", f"Rs. {total_payment:,.2f}")
-            with col3: total_interest = schedule['Interest'].sum(); st.metric("Total Interest", f"Rs. {total_interest:,.2f}")
-            with col4: st.metric("Actual Tenure", period_count)
-            st.divider()
-            
-            tab1, tab2, tab3 = st.tabs(["📊 Charts", "📋 Schedule", "💾 Export"])
+            with col1:
+                st.metric(period_label, f"Rs. {emi:,.2f}")
+            with col2:
+                payment_col = period_label
+                total_payment = schedule[payment_col].sum()
+                st.metric("Total Payment", f"Rs. {total_payment:,.2f}")
+            with col3:
+                total_interest = schedule['Interest'].sum()
+                st.metric("Total Interest", f"Rs. {total_interest:,.2f}")
+            with col4:
+                st.metric("Actual Tenure", period_count)
+
+            st.markdown("---")
+
+            tab1, tab2, tab3 = st.tabs(["📈 Charts", "📋 Schedule", "💾 Export"])
+
             with tab1:
                 left, right = st.columns(2)
-                with left: st.plotly_chart(create_balance_chart(schedule), use_container_width=True)
-                with right: st.plotly_chart(create_pie_chart(schedule), use_container_width=True)
+                with left:
+                    st.plotly_chart(create_balance_chart(schedule), use_container_width=True)
+                with right:
+                    st.plotly_chart(create_pie_chart(schedule), use_container_width=True)
+
                 if st.session_state.rate_changes:
                     c3, c4 = st.columns(2)
-                    with c3: st.plotly_chart(create_interest_rate_timeline(schedule), use_container_width=True)
-                    with c4: st.plotly_chart(create_principal_interest_chart(schedule, is_quarterly), use_container_width=True)
-                else: st.plotly_chart(create_principal_interest_chart(schedule, is_quarterly), use_container_width=True)
+                    with c3:
+                        st.plotly_chart(create_interest_rate_timeline(schedule), use_container_width=True)
+                    with c4:
+                        st.plotly_chart(create_principal_interest_chart(schedule, is_quarterly), use_container_width=True)
+                else:
+                    st.plotly_chart(create_principal_interest_chart(schedule, is_quarterly), use_container_width=True)
 
-            with tab2: st.dataframe(schedule, use_container_width=True, height=500)
+            with tab2:
+                st.dataframe(schedule, use_container_width=True, height=500)
 
             with tab3:
                 st.subheader("📥 Download Options")
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     csv = schedule.to_csv(index=False)
-                    st.download_button(label="📄 Download CSV", data=csv, file_name=f"{period_label.lower()}_schedule_{datetime.now().strftime('%Y%m%d')}.csv", mime="text/csv", use_container_width=True)
+                    st.download_button(
+                        label="/csv Download CSV",
+                        data=csv,
+                        file_name=f"{period_label.lower()}_schedule_{datetime.now().strftime('%Y%m%d')}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
                 with col2:
                     excel_buffer = io.BytesIO()
                     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
                         schedule.to_excel(writer, sheet_name=f'{period_label} Schedule', index=False)
-                        summary_df = pd.DataFrame({'Parameter': ['Loan Amount', period_label, 'Total Payment', 'Total Interest', 'Loan Tenure', 'Initial Rate'], 'Value': [f"Rs. {principal:,.2f}", f"Rs. {emi:,.2f}", f"Rs. {total_payment:,.2f}", f"Rs. {total_interest:,.2f}", period_count, f"{annual_rate:.2f}%"]})
+                        summary_df = pd.DataFrame({
+                            'Parameter': ['Loan Amount', period_label, 'Total Payment', 'Total Interest', 'Loan Tenure', 'Initial Rate'],
+                            'Value': [f"Rs. {principal:,.2f}", f"Rs. {emi:,.2f}", f"Rs. {total_payment:,.2f}", f"Rs. {total_interest:,.2f}", period_count, f"{annual_rate:.2f}%"]
+                        })
                         summary_df.to_excel(writer, sheet_name='Summary', index=False)
                     excel_buffer.seek(0)
-                    st.download_button(label="📊 Download Excel", data=excel_buffer, file_name=f"{period_label.lower()}_schedule_{datetime.now().strftime('%Y%m%d')}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
+                    st.download_button(
+                        label="xlsx Download Excel",
+                        data=excel_buffer,
+                        file_name=f"{period_label.lower()}_schedule_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True
+                    )
                 with col3:
                     pdf_buffer = generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure_months, is_quarterly)
-                    st.download_button(label="📑 Download PDF", data=pdf_buffer, file_name=f"{period_label.lower()}_report_{datetime.now().strftime('%Y%m%d')}.pdf", mime="application/pdf", use_container_width=True)
-                st.divider()
+                    st.download_button(
+                        label="pdf Download PDF",
+                        data=pdf_buffer,
+                        file_name=f"{period_label.lower()}_report_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+
         except Exception as e:
             st.error(f"Error calculating {period_label}: {e}")
             import traceback
-            with st.expander("Error Details"): st.code(traceback.format_exc())
+            with st.expander("Error Details"):
+                st.code(traceback.format_exc())
 
 if __name__ == "__main__":
     main()
