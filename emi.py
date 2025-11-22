@@ -91,6 +91,7 @@ def load_custom_css():
             background-color: #334155 !important; 
             border: 1px solid #475569 !important;
             color: #ffffff !important; 
+            border-radius: 8px !important;
         }
         
         /* Sidebar Stepper Buttons & Icons Fix */
@@ -354,7 +355,11 @@ def bs_to_ad(bs_year, bs_month, bs_day):
                 if curr_m == 0:
                     curr_m = 12
                     curr_y -= 1
+                    if curr_y not in BS_MONTHS:
+                        return None, None, None
                 curr_d = BS_MONTHS[curr_y][curr_m-1]
+            else:
+                curr_d = prev_day
         return AD_REFERENCE_DATE - timedelta(days=days_diff)
 
 def format_bs_date(bs_y, bs_m, bs_d):
@@ -460,6 +465,7 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
         else:
             if fixed_emi <= principal * rate_per_period:
                 return None, None, None
+            # Standard formula to derive tenure based on fixed EMI
             actual_tenure = int(np.ceil(
                 np.log(fixed_emi / (fixed_emi - principal * rate_per_period)) /
                 np.log(1 + rate_per_period)
@@ -468,6 +474,7 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
         payments_to_make = actual_tenure if max_payments is None else min(actual_tenure, int(max_payments))
     else:
         actual_tenure = tenure_periods
+        # Calculate EMI based on the nominal tenure
         emi = calculate_emi(principal, annual_rate, tenure_months, is_quarterly)
         payments_to_make = actual_tenure if max_payments is None else min(actual_tenure, int(max_payments))
         
@@ -475,12 +482,15 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
     balance = principal
     payment_label = "Quarterly" if is_quarterly else "EMI"
     
+    # The first 'previous_payment_date' is the start date of the loan
     previous_payment_date = start_date
     
     for m in range(payments_to_make):
         if is_quarterly:
+            # Find the next BS quarter end *after* the previous payment
             payment_date = get_next_bs_quarter_end(previous_payment_date)
         else:
+            # Find the 10th of the month, m months after the first payment base date
             payment_date = payment_date_10th(start_date, m, is_quarterly=False)
             
         try:
@@ -491,15 +501,19 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
         opening_balance = balance
         
         # ---------------------------------------------------------
-        # CHANGED LOGIC: Daily Reducing Balance (Exact Days)
+        # CRITICAL LOGIC: Interest Calculation
+        # For Quarterly: Use Daily Reducing Balance (Exact Days)
+        # For EMI: Use Monthly Reducing Balance (1/12th Rate) to match tenure
         # ---------------------------------------------------------
-        days_in_period = (payment_date - previous_payment_date).days
         
-        # Avoid division by zero or negative days if dates are messy
-        days_in_period = max(1, days_in_period) 
-        
-        # Daily Rate = Annual Rate / 365
-        interest = balance * (annual_rate / 100) * (days_in_period / 365)
+        if is_quarterly:
+            days_in_period = (payment_date - previous_payment_date).days
+            days_in_period = max(1, days_in_period)
+            interest = balance * (annual_rate / 100) * (days_in_period / 365)
+        else:
+            # Standard Monthly Interest = Balance * (Annual Rate / 1200)
+            # This aligns with the standard EMI formula assumptions
+            interest = balance * (annual_rate / 1200)
         # ---------------------------------------------------------
         
         principal_paid = emi - interest
@@ -513,10 +527,10 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             emi_paid = emi
             
         closing_balance = balance - principal_paid
-        period_label = f"Q{start_month + m}" if is_quarterly else str(start_month + m)
+        period_label_val = f"Q{start_month + m}" if is_quarterly else str(start_month + m)
         
         schedule.append({
-            'Period': period_label,
+            'Period': period_label_val,
             'Payment Date (AD)': payment_date.strftime('%Y-%m-%d'),
             'Payment Date (BS)': format_bs_date(bs_y, bs_m, bs_d),
             'Opening Balance': round(opening_balance, 2),
@@ -559,33 +573,36 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
         
         if i < len(full_changes) - 1:
             seg_end = full_changes[i + 1]['date']
+            # Estimate the number of payment periods in this segment
             months_in_segment = count_payments_between(seg_start, seg_end, is_quarterly)
         else:
+            # For the last segment, let the amortization run to the end
             months_in_segment = None
             
-        if months_in_segment == 0:
+        if months_in_segment == 0 and i < len(full_changes) - 1:
             current_date = full_changes[i]['date']
             continue
             
         schedule, emi_used, theoretical_tenure = calculate_emi_schedule(
             current_principal,
             seg_rate,
-            tenure_months,
+            tenure_months, # Keep nominal tenure for base EMI calculation if needed
             seg_start,
-            fixed_emi=initial_emi,
+            fixed_emi=initial_emi, # Use the initial fixed EMI across all segments
             start_month=current_month_index,
             max_payments=months_in_segment,
             is_quarterly=is_quarterly
         )
         
         if schedule is None:
-            # Fallback if EMI is too low
+            # Fallback if EMI is too low due to rate increase (EMI < Interest)
             periods_passed = current_month_index - 1
             months_passed = periods_passed * (3 if is_quarterly else 1)
+            # Recalculate EMI based on remaining principal and remaining nominal time (or minimum 6 periods)
             remaining_months = max(6, tenure_months - months_passed)
             
             new_emi = calculate_emi(current_principal, seg_rate, remaining_months, is_quarterly)
-            initial_emi = new_emi
+            initial_emi = new_emi # Reset the fixed EMI for subsequent payments
             
             schedule, emi_used, theoretical_tenure = calculate_emi_schedule(
                 current_principal,
@@ -602,16 +619,7 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
             all_schedules.append(schedule)
             
             current_principal = schedule.iloc[-1]['Closing Balance']
-            # Update logic for next segment start date
-            seg_last_payment_date_str = schedule.iloc[-1]['Payment Date (AD)']
-            seg_last_payment_date = datetime.strptime(seg_last_payment_date_str, '%Y-%m-%d')
-            
-            # The next segment effectively starts from the last payment date
-            # Note: calculate_emi_schedule treats 'start_date' as the 'previous payment date'
-            # So for the next segment, we should use the last payment date of this segment as the start.
-            # However, the loop above uses 'seg_start' from the rate change list.
-            # We need to ensure continuity of dates. 
-            
+            # Update the starting index for the next segment
             if is_quarterly:
                 current_month_index = int(schedule.iloc[-1]['Period'][1:]) + 1
             else:
@@ -625,6 +633,7 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
         combined = pd.concat(all_schedules, ignore_index=True)
         return combined, initial_emi
     else:
+        # Fallback if no schedule could be generated
         return calculate_emi_schedule(principal, initial_rate, tenure_months, start_date, is_quarterly=is_quarterly)[:2]
 
 # [Keep all your export and chart functions exactly as they are]
@@ -752,7 +761,7 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
         [f'{payment_label}:', f'Rs. {emi:,.2f}'],
         ['Total Payment:', f'Rs. {total_payment:,.2f}'],
         ['Total Interest:', f'Rs. {total_interest:,.2f}'],
-        ['Loan Tenure:', f'{len(schedule)} {"quarters" if is_quarterly else "months"}'],
+        ['Loan Tenure:', f'{len(schedule)} {'quarters' if is_quarterly else 'months'}'],
     ]
     
     summary_table = Table(summary_data, colWidths=[3*inch, 3*inch])
@@ -1035,7 +1044,7 @@ def main():
                     rate_changes, errors = parse_excel_rate_changes(uploaded_file)
                     
                     if rate_changes:
-                        st.success(f"✅ Found {len(rate_changes)} rate change(s)")
+                        st.success(f"✅ Found {len(rate_changes)} rate change(s)}}") # Fixed SyntaxError: Escaped literal brace
                         col1, col2 = st.columns(2)
                         with col1:
                             if st.button("✓ Apply", use_container_width=True):
