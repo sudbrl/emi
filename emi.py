@@ -15,33 +15,46 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 # ============================================================================
 # VISUAL STYLING & CONFIG
 # ============================================================================
+# ============================================================================
+# VISUAL STYLING & CONFIG
+# ============================================================================
 def load_custom_css():
     st.markdown("""
         <style>
         /* Import Google Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
         
-        /* Global Settings */
+        /* Global Settings - REDUCING SCALE HERE */
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
-            color: #374151; /* Slightly darker gray for better readability */
+            color: #374151;
+            font-size: 14px; /* Reduced from default 16px to make it look 'normal' */
         }
         
         h1, h2, h3 {
             font-family: 'Poppins', sans-serif;
-            color: #1e293b; /* Darker indigo-gray for headers */
+            color: #1e293b;
             font-weight: 600;
         }
-        
-        /* App Background - Light Professional Gray */
+
+        /* App Background */
         .stApp {
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0); /* Softer gradient background */
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        }
+
+        /* CRITICAL FIX: Reduce the massive top padding Streamlit adds by default 
+           This pushes the content up and uses screen real estate better.
+        */
+        .block-container {
+            padding-top: 1.5rem !important;
+            padding-bottom: 1rem !important;
+            max-width: 95% !important;
         }
         
         /* Sidebar Styling */
         section[data-testid="stSidebar"] {
-            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe); /* Gradient background */
-            border-right: 1px solid #94a3b8; /* Softer border color */
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+            border-right: 1px solid #94a3b8;
         }
         section[data-testid="stSidebar"] .block-container {
             padding-top: 2rem;
@@ -49,57 +62,60 @@ def load_custom_css():
         
         /* Custom Card Styling for Metrics */
         div[data-testid="stMetric"] {
-            background: linear-gradient(to bottom, #e0f2fe, #f0f9ff); /* Gradient background */
-            border: 1px solid #60a5fa; /* Stronger border color */
-            padding: 20px;
+            background: linear-gradient(to bottom, #e0f2fe, #f0f9ff);
+            border: 1px solid #60a5fa;
+            padding: 15px; /* Reduced padding slightly */
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transition: all 0.2s ease-in-out;
         }
         div[data-testid="stMetric"]:hover {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px); /* Lift effect on hover */
+            transform: translateY(-2px);
         }
         div[data-testid="stMetricLabel"] {
-            color: #475569; /* Softer label color */
-            font-size: 0.875rem;
+            color: #475569;
+            font-size: 0.8rem; /* Adjusted for scale */
             font-weight: 500;
         }
         div[data-testid="stMetricValue"] {
-            color: #1e293b; /* Darker value color */
+            color: #1e293b;
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.3rem; /* Adjusted for scale */
         }
         
         /* Inputs Styling */
         .stTextInput input, .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
             background-color: #ffffff;
-            border: 1px solid #94a3b8; /* Softer border */
+            border: 1px solid #94a3b8;
             border-radius: 8px;
             color: #374151;
+            font-size: 14px; /* Ensure inputs match new scale */
+            min-height: 40px; /* Standardize height */
         }
         .stTextInput input:focus, .stNumberInput input:focus, .stDateInput input:focus {
-            border-color: #6364ff; /* Indigo focus color */
-            box-shadow: 0 0 0 2px rgba(99, 100, 255, 0.2); /* Indigo focus shadow */
+            border-color: #6364ff;
+            box-shadow: 0 0 0 2px rgba(99, 100, 255, 0.2);
         }
         
         /* Buttons */
         .stButton > button {
             border-radius: 8px;
             font-weight: 500;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 1rem; /* Slightly tighter padding */
             border: none;
             transition: all 0.2s;
+            font-size: 14px;
         }
         
         /* Primary Action Button */
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"] {
-            background: #0d9488; /* Teal primary color */
+            background: #0d9488;
             color: white;
             box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.3);
         }
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"]:hover {
-            background: #0f766e; /* Darker teal on hover */
+            background: #0f766e;
             box-shadow: 0 6px 8px -1px rgba(13, 148, 136, 0.4);
             transform: translateY(-1px);
         }
@@ -107,11 +123,11 @@ def load_custom_css():
         /* Secondary/Reset Button */
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
             background-color: #ffffff;
-            border: 1px solid #dc2626; /* Red border */
-            color: #dc2626; /* Red text */
+            border: 1px solid #dc2626;
+            color: #dc2626;
         }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {
-            background-color: #fef2f2; /* Light red background on hover */
+            background-color: #fef2f2;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
@@ -119,44 +135,48 @@ def load_custom_css():
         .stTabs [data-baseweb="tab-list"] {
             gap: 8px;
             background-color: transparent;
-            border-bottom: 1px solid #cbd5e1; /* Softer tab bottom border */
+            border-bottom: 1px solid #cbd5e1;
         }
         .stTabs [data-baseweb="tab"] {
             height: 40px;
             background-color: transparent;
             border: none;
-            color: #64748b; /* Softer tab text color */
+            color: #64748b;
             font-weight: 500;
+            font-size: 14px;
         }
         .stTabs [aria-selected="true"] {
-            background-color: #4f46e5; /* Indigo active tab */
-            color: #ffffff; /* White text for active tab */
+            background-color: #4f46e5;
+            color: #ffffff;
             border-bottom: 2px solid #4f46e5;
         }
         
         /* Expander */
         .streamlit-expanderHeader {
-            background-color: #dbeafe; /* Light blue header */
+            background-color: #dbeafe;
             border-radius: 8px;
-            border: 1px solid #94a3b8; /* Softer border */
+            border: 1px solid #94a3b8;
+            font-size: 14px;
         }
         
-        /* Info Box Styling (custom class usage) */
+        /* Info Box Styling */
         .info-box {
-            background-color: #f0fdfa; /* Light teal background */
-            padding: 20px;
+            background-color: #f0fdfa;
+            padding: 15px;
             border-radius: 10px;
-            border-left: 4px solid #0d9488; /* Teal accent border */
+            border-left: 4px solid #0d9488;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            color: #1e293b; /* Darker text */
+            color: #1e293b;
             margin-bottom: 20px;
+            font-size: 14px;
         }
         
         /* DataFrame */
         [data-testid="stDataFrame"] {
-            border: 1px solid #94a3b8; /* Softer border */
+            border: 1px solid #94a3b8;
             border-radius: 8px;
             background: white;
+            font-size: 13px; /* Data looks better smaller */
         }
         
         /* Hide Streamlit Menu and Footer */
