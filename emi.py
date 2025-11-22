@@ -947,7 +947,7 @@ init_session_state()
 
 def main():
     st.set_page_config(
-        page_title="Premium Loan Calculator",
+        page_title="Loan Calculator",
         page_icon="💰",
         layout="wide",
         initial_sidebar_state="expanded"
@@ -955,7 +955,7 @@ def main():
     
     load_custom_css()
     
-    st.title("💰 Premium Loan Repayment Planner")
+    st.title("💰 Loan Repayment Planner")
     
     st.markdown("""
     <div class='info-box'>
