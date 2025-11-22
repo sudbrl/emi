@@ -21,187 +21,145 @@ def load_custom_css():
         /* Import Google Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
         
-        /* Global Reset & Body */
+        /* Global Settings */
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
-            color: #1e293b; /* Slate-800 */
-            -webkit-font-smoothing: antialiased;
+            color: #374151; /* Slightly darker gray for better readability */
         }
         
-        /* Headings */
         h1, h2, h3 {
             font-family: 'Poppins', sans-serif;
-            color: #0f172a; /* Slate-900 */
-            font-weight: 700;
-            letter-spacing: -0.02em;
+            color: #1e293b; /* Darker indigo-gray for headers */
+            font-weight: 600;
         }
         
-        /* Main App Background - Subtle Dot Pattern */
+        /* App Background - Light Professional Gray */
         .stApp {
-            background-color: #f8fafc; /* Slate-50 */
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 24px 24px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0); /* Softer gradient background */
         }
         
         /* Sidebar Styling */
         section[data-testid="stSidebar"] {
-            background-color: #ffffff;
-            border-right: 1px solid #e2e8f0;
-            box-shadow: 4px 0 24px rgba(0,0,0,0.02);
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe); /* Gradient background */
+            border-right: 1px solid #94a3b8; /* Softer border color */
         }
         section[data-testid="stSidebar"] .block-container {
-            padding-top: 3rem;
-        }
-        section[data-testid="stSidebar"] h1, 
-        section[data-testid="stSidebar"] h2, 
-        section[data-testid="stSidebar"] h3 {
-            color: #334155;
+            padding-top: 2rem;
         }
         
-        /* Card/Metric Styling - "Glass" effect on white */
+        /* Custom Card Styling for Metrics */
         div[data-testid="stMetric"] {
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            background: linear-gradient(to bottom, #e0f2fe, #f0f9ff); /* Gradient background */
+            border: 1px solid #60a5fa; /* Stronger border color */
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease-in-out;
         }
-        
-        /* Hover effect for cards */
         div[data-testid="stMetric"]:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: #3b82f6; /* Blue-500 accent */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px); /* Lift effect on hover */
         }
-        
-        /* Metric Labels */
         div[data-testid="stMetricLabel"] {
-            color: #64748b; /* Slate-500 */
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            color: #475569; /* Softer label color */
+            font-size: 0.875rem;
+            font-weight: 500;
         }
-        
-        /* Metric Values */
         div[data-testid="stMetricValue"] {
-            color: #0f172a; /* Slate-900 */
-            font-weight: 800;
-            font-size: 1.75rem;
+            color: #1e293b; /* Darker value color */
+            font-weight: 700;
+            font-size: 1.5rem;
         }
         
-        /* Input Fields Styling */
+        /* Inputs Styling */
         .stTextInput input, .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
             background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            color: #1e293b;
-            padding: 0.5rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            border: 1px solid #94a3b8; /* Softer border */
+            border-radius: 8px;
+            color: #374151;
         }
-        
         .stTextInput input:focus, .stNumberInput input:focus, .stDateInput input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-            outline: none;
+            border-color: #6364ff; /* Indigo focus color */
+            box-shadow: 0 0 0 2px rgba(99, 100, 255, 0.2); /* Indigo focus shadow */
         }
         
-        /* Button Styling */
+        /* Buttons */
         .stButton > button {
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
             border: none;
-            transition: all 0.2s ease;
-            letter-spacing: 0.01em;
+            transition: all 0.2s;
         }
         
-        /* Primary Button (Calculate) */
+        /* Primary Action Button */
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"] {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8); /* Royal Blue Gradient */
+            background: #0d9488; /* Teal primary color */
             color: white;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.3);
         }
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.35);
+            background: #0f766e; /* Darker teal on hover */
+            box-shadow: 0 6px 8px -1px rgba(13, 148, 136, 0.4);
             transform: translateY(-1px);
         }
         
-        /* Secondary Button (Reset) */
+        /* Secondary/Reset Button */
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
             background-color: #ffffff;
-            border: 1px solid #ef4444;
-            color: #ef4444;
+            border: 1px solid #dc2626; /* Red border */
+            color: #dc2626; /* Red text */
         }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {
-            background-color: #fef2f2;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
-            transform: translateY(-1px);
+            background-color: #fef2f2; /* Light red background on hover */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         /* Tabs */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 24px;
+            gap: 8px;
             background-color: transparent;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 0;
+            border-bottom: 1px solid #cbd5e1; /* Softer tab bottom border */
         }
         .stTabs [data-baseweb="tab"] {
-            height: 48px;
+            height: 40px;
             background-color: transparent;
             border: none;
-            color: #64748b;
-            font-weight: 600;
-            font-size: 1rem;
-            padding: 0 4px;
+            color: #64748b; /* Softer tab text color */
+            font-weight: 500;
         }
         .stTabs [aria-selected="true"] {
-            color: #2563eb; /* Blue-600 */
-            border-bottom: 2px solid #2563eb;
-            margin-bottom: -2px; /* Overlap border */
+            background-color: #4f46e5; /* Indigo active tab */
+            color: #ffffff; /* White text for active tab */
+            border-bottom: 2px solid #4f46e5;
         }
         
         /* Expander */
         .streamlit-expanderHeader {
-            background-color: #ffffff;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            color: #1e293b;
-            font-weight: 600;
+            background-color: #dbeafe; /* Light blue header */
+            border-radius: 8px;
+            border: 1px solid #94a3b8; /* Softer border */
         }
         
-        /* Info Box Custom Styling */
+        /* Info Box Styling (custom class usage) */
         .info-box {
-            background-color: #ffffff;
-            padding: 24px;
-            border-radius: 12px;
-            border-left: 6px solid #3b82f6;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            color: #334155;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-        }
-        
-        /* DataFrame styling */
-        div[data-testid="stDataFrame"] {
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-        }
-        
-        /* Alerts/Success/Error messages */
-        div[data-baseweb="notification"] {
+            background-color: #f0fdfa; /* Light teal background */
+            padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #0d9488; /* Teal accent border */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            color: #1e293b; /* Darker text */
+            margin-bottom: 20px;
         }
         
-        /* Hide Streamlit Branding */
+        /* DataFrame */
+        [data-testid="stDataFrame"] {
+            border: 1px solid #94a3b8; /* Softer border */
+            border-radius: 8px;
+            background: white;
+        }
+        
+        /* Hide Streamlit Menu and Footer */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         </style>
