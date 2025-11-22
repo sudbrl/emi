@@ -775,14 +775,13 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     
     payment_col = payment_label
     # Added 'Days' column to PDF for verification
-    schedule_data = [['Period', 'Date (AD)', 'Date (BS)', 'Days', 'Opening', payment_label, 'Interest', 'Principal', 'Closing', 'Rate %']]
+    schedule_data = [['Period', 'Date (AD)', 'Date (BS)', 'Opening', payment_label, 'Interest', 'Principal', 'Closing', 'Rate %']]
     
     for _, row in schedule.iterrows():
         schedule_data.append([
             str(row['Period']),
             row['Payment Date (AD)'],
             row['Payment Date (BS)'],
-            str(row['Days']), # Added Days
             f"{row['Opening Balance']:,.0f}",
             f"{row[payment_col]:,.0f}",
             f"{row['Interest']:,.0f}",
