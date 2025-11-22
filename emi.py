@@ -953,7 +953,7 @@ def main():
     
     load_custom_css()
     
-    st.title("💰 Loan Repayment Planner")
+    st.title("EMI/EQI Schedule")
     
     st.markdown("""
     <div class='info-box'>
