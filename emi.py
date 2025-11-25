@@ -13,191 +13,179 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 # ============================================================================
-# PREMIUM VISUAL STYLING & CONFIG
-# ============================================================================
-# ============================================================================
-# BS CALENDAR DATA (VERIFIED)
+# VISUAL STYLING & CONFIG
 # ============================================================================
 def load_custom_css():
     st.markdown("""
         <style>
-        /* Import Premium Fonts */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
-        /* Global text: improve contrast for mobile */
+        /* Import Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+        
+        /* Global Settings - REDUCING SCALE HERE */
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
-            color: #1e293b; /* Darker gray for better contrast */
-            font-size: 16px; /* Minimum readable size on mobile */
-            line-height: 1.6;
+            color: #374151;
+            font-size: 14px; /* Reduced from default 16px to make it look 'normal' */
         }
-        h1, h2, h3, h4, h5, h6 {
+        
+        h1, h2, h3 {
             font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            color: #0f766e; /* Teal headings for clarity */
+            color: #1e293b;
+            font-weight: 600;
         }
+
         /* App Background */
         .stApp {
-            background: linear-gradient(135deg, #f0f9ff 0%, #cffafe 100%);
-            background-attachment: fixed;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
         }
-        /* Main Content Container */
+
+        /* CRITICAL FIX: Reduce the massive top padding Streamlit adds by default 
+           This pushes the content up and uses screen real estate better.
+        */
         .block-container {
-            padding-top: 2rem !important;
-            padding-bottom: 2rem !important;
-            max-width: 1400px !important;
-            background: rgba(255, 255, 255, 0.95); /* Less transparency for better text clarity */
-            backdrop-filter: blur(12px);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            margin-top: 1rem;
-            margin-bottom: 2rem;
+            padding-top: 1.5rem !important;
+            padding-bottom: 1rem !important;
+            max-width: 95% !important;
         }
-        /* Sidebar */
+        
+        /* Sidebar Styling */
         section[data-testid="stSidebar"] {
-            background: #0f172a;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+            border-right: 1px solid #94a3b8;
         }
-        section[data-testid="stSidebar"] h1,
-        section[data-testid="stSidebar"] h2,
-        section[data-testid="stSidebar"] label,
-        section[data-testid="stSidebar"] p,
-        section[data-testid="stSidebar"] .stMarkdown {
-            color: #f8fafc !important;
+        section[data-testid="stSidebar"] .block-container {
+            padding-top: 2rem;
         }
-
-        /* =============== MAIN AREA INPUTS (VISIBLE ON MOBILE) =============== */
-        .block-container .stTextInput input,
-        .block-container .stNumberInput input,
-        .block-container .stDateInput input,
-        .block-container .stSelectbox div[data-baseweb="select"] > div {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 8px !important;
-            font-size: 16px !important;
-        }
-        .block-container .stSelectbox div[data-baseweb="select"] {
-            color: #0f172a !important;
-        }
-
-        /* ✅ FIXED: Visible +/- Stepper Buttons in Main Area */
-        .block-container [data-testid="stNumberInput"] button {
-            background-color: #f1f5f9 !important;
-            color: #475569 !important;
-            border: 1px solid #cbd5e1 !important;
-            width: 28px !important;
-            height: 28px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            border-radius: 6px !important;
-            font-size: 14px !important;
-            opacity: 1 !important;
-        }
-        .block-container [data-testid="stNumberInput"] button:hover {
-            background-color: #e2e8f0 !important;
-            color: #0f172a !important;
-        }
-        /* Ensure SVG icons inside steppers are visible */
-        .block-container [data-testid="stNumberInput"] svg {
-            fill: #475569 !important;
-        }
-
-        /* Sidebar inputs (keep dark mode) */
-        section[data-testid="stSidebar"] .stTextInput input,
-        section[data-testid="stSidebar"] .stNumberInput input,
-        section[data-testid="stSidebar"] .stDateInput input,
-        section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div {
-            background-color: #334155 !important;
-            color: #ffffff !important;
-            border: 1px solid #475569 !important;
-            border-radius: 8px !important;
-        }
-        section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {
-            color: #ffffff !important;
-        }
-        /* Sidebar stepper buttons and icons */
-        section[data-testid="stSidebar"] [data-testid="stNumberInput"] button {
-            background-color: transparent !important;
-            color: white !important;
-            border: none !important;
-        }
-        section[data-testid="stSidebar"] [data-testid="stNumberInput"] svg,
-        section[data-testid="stSidebar"] [data-testid="stDateInput"] svg,
-        section[data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
-            fill: white !important;
-        }
-
-        /* ============================================= */
-        /* BUTTON STYLING (Ensure visible on mobile) */
-        /* ============================================= */
-        .stButton > button, .stDownloadButton > button {
-            border-radius: 10px;
-            font-weight: 600;
-            border: none;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-size: 16px !important;
-            min-height: 48px;
-        }
-        .block-container .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-            color: white !important;
-        }
-        .block-container .stButton > button:not([kind="primary"]) {
-            background: white;
-            border: 1px solid #ef4444;
-            color: #ef4444 !important;
-        }
-        .block-container .stDownloadButton > button {
-            background: #f1f5f9;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1;
-        }
-        section[data-testid="stSidebar"] .stButton > button,
-        section[data-testid="stSidebar"] .stDownloadButton > button {
-            background-color: #334155 !important;
-            color: #ffffff !important;
-            border: 1px solid #475569 !important;
-        }
-        section[data-testid="stSidebar"] .stButton > button:hover,
-        section[data-testid="stSidebar"] .stDownloadButton > button:hover {
-            background-color: #0d9488 !important;
-            color: white !important;
-            border-color: #0d9488 !important;
-        }
-
-        /* Other styles unchanged */
+        
+        /* Custom Card Styling for Metrics */
         div[data-testid="stMetric"] {
-            background: white;
-            border-left: 5px solid #0d9488;
-            padding: 1rem;
+            background: linear-gradient(to bottom, #e0f2fe, #f0f9ff);
+            border: 1px solid #60a5fa;
+            padding: 15px; /* Reduced padding slightly */
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease-in-out;
         }
+        div[data-testid="stMetric"]:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        div[data-testid="stMetricLabel"] {
+            color: #475569;
+            font-size: 0.8rem; /* Adjusted for scale */
+            font-weight: 500;
+        }
+        div[data-testid="stMetricValue"] {
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 1.3rem; /* Adjusted for scale */
+        }
+        
+        /* Inputs Styling */
+        .stTextInput input, .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
+            background-color: #ffffff;
+            border: 1px solid #94a3b8;
+            border-radius: 8px;
+            color: #374151;
+            font-size: 14px; /* Ensure inputs match new scale */
+            min-height: 40px; /* Standardize height */
+        }
+        .stTextInput input:focus, .stNumberInput input:focus, .stDateInput input:focus {
+            border-color: #6364ff;
+            box-shadow: 0 0 0 2px rgba(99, 100, 255, 0.2);
+        }
+        
+        /* Buttons */
+        .stButton > button {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.4rem 1rem; /* Slightly tighter padding */
+            border: none;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        /* Primary Action Button */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"] {
+            background: #0d9488;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.3);
+        }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(1) button[kind="primary"]:hover {
+            background: #0f766e;
+            box-shadow: 0 6px 8px -1px rgba(13, 148, 136, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        /* Secondary/Reset Button */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
+            background-color: #ffffff;
+            border: 1px solid #dc2626;
+            color: #dc2626;
+        }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {
+            background-color: #fef2f2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* Tabs */
         .stTabs [data-baseweb="tab-list"] {
-            border-bottom: 2px solid #e2e8f0;
+            gap: 8px;
+            background-color: transparent;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 40px;
+            background-color: transparent;
+            border: none;
+            color: #64748b;
+            font-weight: 500;
+            font-size: 14px;
         }
         .stTabs [aria-selected="true"] {
-            color: #0d9488;
-            border-bottom: 3px solid #0d9488;
+            background-color: #4f46e5;
+            color: #ffffff;
+            border-bottom: 2px solid #4f46e5;
         }
+        
+        /* Expander */
+        .streamlit-expanderHeader {
+            background-color: #dbeafe;
+            border-radius: 8px;
+            border: 1px solid #94a3b8;
+            font-size: 14px;
+        }
+        
+        /* Info Box Styling */
         .info-box {
-            background: #f0fdfa;
-            padding: 1.25rem;
-            border-radius: 12px;
-            border-left: 5px solid #0d9488;
-            color: #134e4a;
-            margin-bottom: 1.5rem;
+            background-color: #f0fdfa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #0d9488;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 14px;
         }
+        
+        /* DataFrame */
+        [data-testid="stDataFrame"] {
+            border: 1px solid #94a3b8;
+            border-radius: 8px;
+            background: white;
+            font-size: 13px; /* Data looks better smaller */
+        }
+        
+        /* Hide Streamlit Menu and Footer */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
         </style>
     """, unsafe_allow_html=True)
+
+# ============================================================================
+# BS CALENDAR DATA (VERIFIED)
+# ============================================================================
+# Verified Data source for BS Calendar (2070-2099)
 BS_MONTHS = {
     2070: [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30],
     2071: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
@@ -210,7 +198,7 @@ BS_MONTHS = {
     2078: [31, 31, 31, 32, 31, 31, 30, 29, 30, 29, 30, 30],
     2079: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
     2080: [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 30],
-    2081: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31],
+    2081: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31], # Current Year
     2082: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
     2083: [31, 31, 32, 31, 31, 30, 30, 30, 29, 30, 30, 30],
     2084: [31, 31, 32, 31, 31, 30, 30, 30, 29, 30, 30, 30],
@@ -271,6 +259,7 @@ AD_REFERENCE_DATE = datetime(2013, 4, 14)
 # HELPERS
 # ============================================================================
 def get_nepal_time():
+    """Get current time in Nepal (UTC+5:45)"""
     utc_now = datetime.now(timezone.utc)
     nepal_time = utc_now + timedelta(hours=5, minutes=45)
     return nepal_time.date()
@@ -324,7 +313,7 @@ def ad_to_bs(ad_date):
 
 def bs_to_ad(bs_year, bs_month, bs_day):
     if bs_year not in BS_MONTHS:
-        return datetime.now()
+        return datetime.now() # Fallback if year not found
     
     days_diff = 0
     ref_tuple = (BS_REFERENCE_YEAR, BS_REFERENCE_MONTH, BS_REFERENCE_DAY)
@@ -334,6 +323,7 @@ def bs_to_ad(bs_year, bs_month, bs_day):
         return AD_REFERENCE_DATE
     
     if target_tuple > ref_tuple:
+        # Calculate days from reference date forward
         for y in range(BS_REFERENCE_YEAR, bs_year):
             days_diff += sum(BS_MONTHS[y])
         for m in range(1, bs_month):
@@ -341,6 +331,7 @@ def bs_to_ad(bs_year, bs_month, bs_day):
         days_diff += (bs_day - 1)
         return AD_REFERENCE_DATE + timedelta(days=days_diff)
     else:
+        # Calculate days backwards from reference date
         curr_y, curr_m, curr_d = BS_REFERENCE_YEAR, BS_REFERENCE_MONTH, BS_REFERENCE_DAY
         while (curr_y, curr_m, curr_d) > target_tuple:
             days_diff += 1
@@ -350,11 +341,7 @@ def bs_to_ad(bs_year, bs_month, bs_day):
                 if curr_m == 0:
                     curr_m = 12
                     curr_y -= 1
-                    if curr_y not in BS_MONTHS:
-                        return None, None, None
                 curr_d = BS_MONTHS[curr_y][curr_m-1]
-            else:
-                curr_d = prev_day
         return AD_REFERENCE_DATE - timedelta(days=days_diff)
 
 def format_bs_date(bs_y, bs_m, bs_d):
@@ -371,7 +358,7 @@ def add_months(date_obj, n_months):
 
 def payment_date_10th(start_date, offset_months, is_quarterly=False):
     months_to_add = offset_months * 3 if is_quarterly else offset_months
-    if start_date.day < 10:
+    if start_date.day < 10: 
         first_payment_base = start_date.replace(day=10)
     else:
         first_payment_base = add_months(start_date.replace(day=1), 1).replace(day=10)
@@ -382,8 +369,12 @@ def payment_date_10th(start_date, offset_months, is_quarterly=False):
     return datetime(pd_date.year, pd_date.month, d)
 
 def get_next_bs_quarter_end(from_date_ad):
+    """
+    Finds the next BS quarter end date strictly after from_date_ad.
+    Quarter ends are the last days of BS Months 3 (Ashad), 6 (Ashwin), 9 (Poush), 12 (Chaitra).
+    """
     bs_y, bs_m, bs_d = ad_to_bs(from_date_ad)
-    if bs_y is None: return from_date_ad + timedelta(days=90)
+    if bs_y is None: return from_date_ad + timedelta(days=90) # Fallback
     
     if bs_m < 3:
         target_m = 3
@@ -401,13 +392,15 @@ def get_next_bs_quarter_end(from_date_ad):
         target_m = 3
         target_y = bs_y + 1
         
-    if target_y not in BS_MONTHS:
+    if target_y not in BS_MONTHS: # Fallback if year not found
         return from_date_ad + timedelta(days=90)
         
     target_d = BS_MONTHS[target_y][target_m - 1]
     target_ad = bs_to_ad(target_y, target_m, target_d)
     
+    # If calculated date is not strictly after the input date, find the next one
     if target_ad <= from_date_ad:
+        # Add a day to the input date and recurse
         return get_next_bs_quarter_end(from_date_ad + timedelta(days=1))
         
     return target_ad
@@ -418,16 +411,19 @@ def count_payments_between(segment_start_date, segment_end_date, is_quarterly=Fa
     for off in range(max_check):
         if is_quarterly:
             pd_date = get_next_bs_quarter_end(current_marker_date)
-            current_marker_date = pd_date
+            current_marker_date = pd_date # Update for next quarter calculation
         else:
             pd_date = payment_date_10th(segment_start_date, off, is_quarterly=False)
             
-        if pd_date <= segment_end_date:
+        if pd_date <= segment_end_date: 
             count += 1
         else:
             break
     return count
 
+# ============================================================================
+# EMI CALCULATION
+# ============================================================================
 def calculate_emi(principal, annual_rate, tenure_months, is_quarterly=False):
     if is_quarterly:
         quarterly_rate = annual_rate / (4 * 100)
@@ -446,7 +442,6 @@ def calculate_emi(principal, annual_rate, tenure_months, is_quarterly=False):
         return emi
 
 def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fixed_emi=None, start_month=1, max_payments=None, is_quarterly=False):
-    # Standard EMI for equal monthly installments
     if is_quarterly:
         rate_per_period = annual_rate / (4 * 100)
         tenure_periods = int(np.ceil(tenure_months / 3))
@@ -459,8 +454,8 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             actual_tenure = int(np.ceil(principal / fixed_emi))
         else:
             if fixed_emi <= principal * rate_per_period:
+                 # If EMI is less than first interest, it's invalid
                 return None, None, None
-            # Standard formula to derive tenure based on fixed EMI
             actual_tenure = int(np.ceil(
                 np.log(fixed_emi / (fixed_emi - principal * rate_per_period)) /
                 np.log(1 + rate_per_period)
@@ -469,7 +464,6 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
         payments_to_make = actual_tenure if max_payments is None else min(actual_tenure, int(max_payments))
     else:
         actual_tenure = tenure_periods
-        # Calculate EMI based on the nominal tenure
         emi = calculate_emi(principal, annual_rate, tenure_months, is_quarterly)
         payments_to_make = actual_tenure if max_payments is None else min(actual_tenure, int(max_payments))
         
@@ -477,15 +471,16 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
     balance = principal
     payment_label = "Quarterly" if is_quarterly else "EMI"
     
-    # The first 'previous_payment_date' is the start date of the loan
-    previous_payment_date = start_date
+    # Variables to track payment dates for daily interest calculation
+    previous_payment_date = start_date 
+    # If calculating Quarterly payments logic for date finding
+    prev_marker_date = start_date
     
     for m in range(payments_to_make):
         if is_quarterly:
-            # Find the next BS quarter end *after* the previous payment
-            payment_date = get_next_bs_quarter_end(previous_payment_date)
+            payment_date = get_next_bs_quarter_end(prev_marker_date)
+            prev_marker_date = payment_date # Update for next iteration
         else:
-            # Find the 10th of the month, m months after the first payment base date
             payment_date = payment_date_10th(start_date, m, is_quarterly=False)
             
         try:
@@ -495,32 +490,44 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
             
         opening_balance = balance
         
-        # ---------------------------------------------------------
-        # CRITICAL LOGIC: Daily Reducing Balance (Exact Days)
-        # Interest is based on the exact difference between due dates
-        # ---------------------------------------------------------
+        # -------------------------------------------------------
+        # UPDATED LOGIC: Calculate Interest based on Actual Days
+        # -------------------------------------------------------
         days_in_period = (payment_date - previous_payment_date).days
-        days_in_period = max(1, days_in_period) 
+        daily_rate = annual_rate / (365 * 100)
+        interest = balance * daily_rate * days_in_period
         
-        # Daily Rate = Annual Rate / 365
-        interest = balance * (annual_rate / 100) * (days_in_period / 365)
-        # ---------------------------------------------------------
-        
+        # Update tracking variable
+        previous_payment_date = payment_date
+        # -------------------------------------------------------
+            
+        # Default Principal Calculation
         principal_paid = emi - interest
         
-        is_theoretical_last_payment = (m == actual_tenure - 1)
-        
-        if principal_paid >= balance or is_theoretical_last_payment:
-            principal_paid = balance
-            emi_paid = balance + interest
+        # -------------------------------------------------------
+        # SPECIAL CONDITION: First EMI checks
+        # If this is the very first payment of the loan (start_month==1, m==0) 
+        # AND start_date is 1st of month.
+        # -------------------------------------------------------
+        if start_month == 1 and m == 0 and start_date.day == 1:
+            principal_paid = 0
+            emi_paid = interest # Payment is Interest only
         else:
-            emi_paid = emi
+            # Standard logic
+            is_theoretical_last_payment = (m == actual_tenure - 1)
+            
+            if principal_paid >= balance or is_theoretical_last_payment:
+                # Last payment scenario
+                principal_paid = balance
+                emi_paid = balance + interest
+            else:
+                emi_paid = emi
             
         closing_balance = balance - principal_paid
-        period_label_val = f"Q{start_month + m}" if is_quarterly else str(start_month + m)
+        period_label = f"Q{start_month + m}" if is_quarterly else str(start_month + m)
         
         schedule.append({
-            'Period': period_label_val,
+            'Period': period_label,
             'Payment Date (AD)': payment_date.strftime('%Y-%m-%d'),
             'Payment Date (BS)': format_bs_date(bs_y, bs_m, bs_d),
             'Opening Balance': round(opening_balance, 2),
@@ -532,130 +539,78 @@ def calculate_emi_schedule(principal, annual_rate, tenure_months, start_date, fi
         })
         
         balance = closing_balance
-        previous_payment_date = payment_date # Update for next loop
-        
-        if balance <= 0.0001:
+        if balance <= 0.0001: # Small tolerance to handle floating point errors
             break
             
     return pd.DataFrame(schedule), emi, actual_tenure
 
-def calculate_precise_emi(principal, annual_rate, tenure_months, start_date, is_quarterly=False):
-    """
-    Iteratively finds the exact EMI required to finish the loan in exactly 'tenure_months'
-    considering the exact day-count logic (Daily Reducing Balance).
-    """
-    # Target tenure
-    target_periods = int(np.ceil(tenure_months / 3)) if is_quarterly else int(tenure_months)
-    
-    # Initial bounds for Binary Search
-    standard_emi = calculate_emi(principal, annual_rate, tenure_months, is_quarterly)
-    low = principal / target_periods # Absolute minimum (0% interest)
-    high = standard_emi * 2.0 # Safe upper bound
-    
-    best_emi = standard_emi
-    
-    # 40 iterations gives high precision
-    for _ in range(40):
-        mid_emi = (low + high) / 2
-        
-        # Run simulation with this fixed EMI
-        schedule, _, _ = calculate_emi_schedule(
-            principal, annual_rate, tenure_months, start_date, 
-            fixed_emi=mid_emi, is_quarterly=is_quarterly
-        )
-        
-        if schedule is None: 
-            # EMI too low (covered by interest check inside schedule, but returns None)
-            low = mid_emi
-            continue
-            
-        periods_calculated = len(schedule)
-        final_balance = schedule.iloc[-1]['Closing Balance'] if periods_calculated > 0 else principal
-
-        # LOGIC FIX: Explicitly check if duration is too long
-        if periods_calculated > target_periods:
-            # Took too long to pay off -> EMI is too Low
-            low = mid_emi
-        elif periods_calculated < target_periods:
-            # Paid off too early -> EMI is too High
-            high = mid_emi
-        else:
-            # Correct duration (periods == target)
-            if final_balance > 1.0: # Tolerance of 1 Rupee
-                # Still have significant balance at end -> EMI is too Low
-                low = mid_emi
-            else:
-                # Paid off exactly on time with 0 balance
-                best_emi = mid_emi
-                # We found a valid EMI, but we try to see if a slightly lower one also works
-                # (Standard binary search convergence)
-                high = mid_emi
-                 
-    return best_emi
-
-def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_date, rate_change_schedule, is_quarterly=False, fixed_initial_emi=None):
+def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_date, rate_change_schedule, is_quarterly=False):
     rate_changes_sorted = sorted(rate_change_schedule, key=lambda x: x['date'])
     
-    if fixed_initial_emi is not None:
-        initial_emi = fixed_initial_emi
-    else:
-        initial_emi = calculate_emi(principal, initial_rate, tenure_months, is_quarterly)
+    # Calculate initial EMI based on original terms
+    initial_emi = calculate_emi(principal, initial_rate, tenure_months, is_quarterly)
     
     current_date = start_date
     all_schedules = []
     current_principal = principal
     current_month_index = 1
     
+    # Prepare a list of changes including the initial rate
     full_changes = []
     full_changes.append({'date': start_date, 'rate': initial_rate})
     
     for ch in rate_changes_sorted:
         if ch['date'] <= start_date:
+             # If a change date is before or on start date, update the initial rate
             full_changes[0] = {'date': start_date, 'rate': ch['rate']}
         else:
             full_changes.append(ch)
             
+    # Iterate through each segment defined by rate changes
     for i in range(len(full_changes)):
         seg_start = full_changes[i]['date']
         seg_rate = full_changes[i]['rate']
         
+        # Determine the end of the current segment
         if i < len(full_changes) - 1:
             seg_end = full_changes[i + 1]['date']
-            # Estimate the number of payment periods in this segment
             months_in_segment = count_payments_between(seg_start, seg_end, is_quarterly)
         else:
-            # For the last segment, let the amortization run to the end
+            # No further changes, continue for the remaining tenure
             months_in_segment = None
             
-        if months_in_segment == 0 and i < len(full_changes) - 1:
+        # Handle case where segment is very short (e.g., 0 months)
+        if months_in_segment == 0:
             current_date = full_changes[i]['date']
             continue
             
+        # Calculate schedule for the current segment
         schedule, emi_used, theoretical_tenure = calculate_emi_schedule(
             current_principal,
             seg_rate,
-            tenure_months, # Keep nominal tenure for base EMI calculation if needed
+            tenure_months, # Use original tenure as baseline
             seg_start,
-            fixed_emi=initial_emi, # Use the initial fixed EMI across all segments
+            fixed_emi=initial_emi, # Use the initial EMI calculated at the start
             start_month=current_month_index,
             max_payments=months_in_segment,
             is_quarterly=is_quarterly
         )
         
+        # Handle potential error in schedule calculation (e.g., EMI too low for new rate)
         if schedule is None:
-            # Fallback if EMI is too low due to rate increase (EMI < Interest)
+            # Recalculate EMI based on current principal, new rate, and remaining tenure
             periods_passed = current_month_index - 1
             months_passed = periods_passed * (3 if is_quarterly else 1)
-            # Recalculate EMI based on remaining principal and remaining nominal time (or minimum 6 periods)
-            remaining_months = max(6, tenure_months - months_passed)
+            remaining_months = max(6, tenure_months - months_passed) # Ensure at least 6 months
             
             new_emi = calculate_emi(current_principal, seg_rate, remaining_months, is_quarterly)
-            initial_emi = new_emi # Reset the fixed EMI for subsequent payments
+            initial_emi = new_emi # Update initial_emi to use for future segments
             
+            # Recalculate schedule with the new EMI
             schedule, emi_used, theoretical_tenure = calculate_emi_schedule(
                 current_principal,
                 seg_rate,
-                tenure_months,
+                tenure_months, # Use original tenure as baseline
                 seg_start,
                 fixed_emi=initial_emi,
                 start_month=current_month_index,
@@ -663,28 +618,33 @@ def apply_multiple_rate_changes(principal, initial_rate, tenure_months, start_da
                 is_quarterly=is_quarterly
             )
             
+        # Append the calculated segment to the full schedule
         if len(schedule) > 0:
             all_schedules.append(schedule)
             
+            # Update state for the next segment
             current_principal = schedule.iloc[-1]['Closing Balance']
-            # Update the starting index for the next segment
             if is_quarterly:
-                current_month_index = int(schedule.iloc[-1]['Period'][1:]) + 1
+                current_month_index = int(schedule.iloc[-1]['Period'][1:]) + 1 # Extract quarter number (QX)
             else:
                 current_month_index = int(schedule.iloc[-1]['Period']) + 1
                 
-        if months_in_segment is None:
-            if current_principal <= 0.01:
+        # Exit loop if loan is fully paid off
+        if months_in_segment is None: # If no further changes planned
+            if current_principal <= 0.01: # Check if loan is essentially paid off
                 break
                 
+    # Combine all segments into a single DataFrame
     if all_schedules:
         combined = pd.concat(all_schedules, ignore_index=True)
-        return combined, initial_emi
+        return combined, initial_emi # Return combined schedule and the (potentially updated) initial_emi
     else:
-        # Fallback if no schedule could be generated
+        # Fallback if no segments were calculated (should not happen if logic is correct)
         return calculate_emi_schedule(principal, initial_rate, tenure_months, start_date, is_quarterly=is_quarterly)[:2]
 
-# [Keep all your export and chart functions exactly as they are]
+# ============================================================================
+# EXPORT FUNCTIONS
+# ============================================================================
 def create_excel_template():
     template_data = {
         'Date': ['2025-12-10', '2026-06-10', '2027-01-15'],
@@ -708,9 +668,11 @@ def create_excel_template():
         })
         instructions.to_excel(writer, sheet_name='Instructions', index=False)
         
+        # Adjust column widths
         worksheet.column_dimensions['A'].width = 20
         worksheet.column_dimensions['B'].width = 15
         
+        # Apply formatting to headers
         from openpyxl.styles import Font, PatternFill, Alignment
         header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
         header_font = Font(color="FFFFFF", bold=True)
@@ -726,17 +688,19 @@ def create_excel_template():
 def parse_excel_rate_changes(uploaded_file):
     try:
         df = pd.read_excel(uploaded_file, sheet_name='Rate Changes')
-        df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.strip() # Clean column names
         
         date_col = None
         rate_col = None
         
+        # Find Date column
         if 'Date' in df.columns: date_col = 'Date'
         elif 'date' in df.columns: date_col = 'date'
         else:
             for col in df.columns:
                 if 'date' in col.lower(): date_col = col; break
                 
+        # Find Rate column
         if 'Rate' in df.columns: rate_col = 'Rate'
         elif 'rate' in df.columns: rate_col = 'rate'
         else:
@@ -750,12 +714,15 @@ def parse_excel_rate_changes(uploaded_file):
         errors = []
         
         for idx, row in df.iterrows():
+            # Skip rows where both date and rate are empty
             if pd.isna(row[date_col]) and pd.isna(row[rate_col]): continue
             
+            # Error if one is empty and the other isn't
             if pd.isna(row[date_col]) or pd.isna(row[rate_col]):
                 errors.append(f"Row {idx + 2}: Missing date or rate"); continue
                 
             try:
+                # Parse date - try common formats first, then fallback to pandas
                 if isinstance(row[date_col], str):
                     for fmt in ['%Y-%m-%d', '%Y/%m/%d', '%d-%m-%Y', '%d/%m/%Y']:
                         try:
@@ -763,13 +730,13 @@ def parse_excel_rate_changes(uploaded_file):
                             break
                         except ValueError:
                             continue
-                    else:
+                    else: # If none of the common formats work, use pandas
                         change_dt = pd.to_datetime(row[date_col]).to_pydatetime()
-                else:
+                else: # Assume it's already a pandas datetime object
                     change_dt = pd.to_datetime(row[date_col]).to_pydatetime()
                     
                 rate_val = float(row[rate_col])
-                if rate_val < 0 or rate_val > 100:
+                if rate_val < 0 or rate_val > 100: # Validate rate range
                     errors.append(f"Row {idx + 2}: Rate {rate_val} is out of valid range (0-100)"); continue
                     
                 rate_changes.append({'date': change_dt, 'rate': rate_val})
@@ -792,29 +759,31 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     styles = getSampleStyleSheet()
     payment_label = "Quarterly" if is_quarterly else "EMI"
     
+    # Title
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
         fontSize=24,
-        textColor=colors.HexColor('#14b8a6'),
+        textColor=colors.HexColor('#1f77b4'),
         spaceAfter=30,
         alignment=TA_CENTER
     )
     elements.append(Paragraph(f"{payment_label} Calculator Report", title_style))
     elements.append(Spacer(1, 12))
     
+    # Summary Table
     summary_data = [
         ['Loan Summary', ''],
         ['Loan Amount:', f'Rs. {principal:,.2f}'],
         [f'{payment_label}:', f'Rs. {emi:,.2f}'],
         ['Total Payment:', f'Rs. {total_payment:,.2f}'],
         ['Total Interest:', f'Rs. {total_interest:,.2f}'],
-        ['Loan Tenure:', f'{len(schedule)} {'quarters' if is_quarterly else 'months'}'],
+        ['Loan Tenure:', f'{len(schedule)} {"quarters" if is_quarterly else "months"}'],
     ]
     
     summary_table = Table(summary_data, colWidths=[3*inch, 3*inch])
     summary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#14b8a6')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -825,13 +794,14 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
     ]))
     elements.append(summary_table)
     elements.append(Spacer(1, 20))
-    elements.append(PageBreak())
     
+    elements.append(PageBreak()) # Start a new page for the schedule
+    
+    # Schedule Table
     elements.append(Paragraph("Payment Schedule", styles['Heading2']))
     elements.append(Spacer(1, 12))
     
     payment_col = payment_label
-    # Added 'Days' column to PDF for verification
     schedule_data = [['Period', 'Date (AD)', 'Date (BS)', 'Opening', payment_label, 'Interest', 'Principal', 'Closing', 'Rate %']]
     
     for _, row in schedule.iterrows():
@@ -847,11 +817,12 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
             f"{row['Interest Rate (%)']:.2f}"
         ])
         
-    col_widths = [0.4*inch, 0.8*inch, 0.8*inch, 0.4*inch, 0.8*inch, 0.8*inch, 0.7*inch, 0.8*inch, 0.9*inch, 0.5*inch]
+    # Calculate column widths dynamically based on content or set fixed widths
+    col_widths = [0.4*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.8*inch, 0.8*inch, 0.9*inch, 0.9*inch, 0.5*inch]
     
     schedule_table = Table(schedule_data, colWidths=col_widths)
     schedule_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#14b8a6')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -860,7 +831,7 @@ def generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure
         ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey])
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]) # Alternating row colors
     ]))
     elements.append(schedule_table)
     
@@ -876,7 +847,7 @@ def create_balance_chart(schedule):
         mode='lines',
         fill='tozeroy',
         name='Outstanding Balance',
-        line=dict(width=3, color='#14b8a6'),
+        line=dict(width=3, color='#6364ff'), # Indigo color
         text=schedule['Period'],
         hovertemplate='Period: %{text}<br>Balance: Rs. %{y:,.0f}<extra></extra>'
     ))
@@ -891,7 +862,7 @@ def create_balance_chart(schedule):
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Inter, sans-serif", color="#374151"),
-        title_font=dict(family="Poppins, sans-serif", size=16, color="#0f766e"),
+        title_font=dict(family="Poppins, sans-serif", size=16, color="#111827"),
         margin=dict(l=20, r=20, t=40, b=20)
     )
     return fig
@@ -904,7 +875,7 @@ def create_principal_interest_chart(schedule, is_quarterly=False):
         x=schedule.index+1,
         y=schedule['Principal'],
         name='Principal',
-        marker_color='#14b8a6',
+        marker_color='#0d9488', # Teal color
         text=schedule['Period'],
         hovertemplate='Period: %{text}<br>Principal: Rs. %{y:,.0f}<extra></extra>'
     ))
@@ -913,7 +884,7 @@ def create_principal_interest_chart(schedule, is_quarterly=False):
         x=schedule.index+1,
         y=schedule['Interest'],
         name='Interest',
-        marker_color='#f59e0b',
+        marker_color='#f59e0b', # Amber color
         text=schedule['Period'],
         hovertemplate='Period: %{text}<br>Interest: Rs. %{y:,.0f}<extra></extra>'
     ))
@@ -929,7 +900,7 @@ def create_principal_interest_chart(schedule, is_quarterly=False):
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Inter, sans-serif", color="#374151"),
-        title_font=dict(family="Poppins, sans-serif", size=16, color="#0f766e"),
+        title_font=dict(family="Poppins, sans-serif", size=16, color="#111827"),
         margin=dict(l=20, r=20, t=40, b=20)
     )
     return fig
@@ -943,7 +914,7 @@ def create_pie_chart(schedule):
         values=[total_principal, total_interest],
         hole=0.6,
         textinfo='label+percent',
-        marker=dict(colors=['#14b8a6', '#f59e0b']),
+        marker=dict(colors=['#0d9488', '#f59e0b']), # Teal and Amber
         texttemplate='<b>%{label}</b><br>%{percent}<br>Rs. %{value:,.0f}'
     )])
     
@@ -954,7 +925,7 @@ def create_pie_chart(schedule):
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Inter, sans-serif", color="#374151"),
-        title_font=dict(family="Poppins, sans-serif", size=16, color="#0f766e"),
+        title_font=dict(family="Poppins, sans-serif", size=16, color="#111827"),
         margin=dict(l=20, r=20, t=40, b=20)
     )
     return fig
@@ -966,8 +937,7 @@ def create_interest_rate_timeline(schedule):
         y=schedule['Interest Rate (%)'],
         mode='lines+markers',
         name='Interest Rate',
-        line=dict(width=3, shape='hv', color='#8b5cf6'),
-        marker=dict(size=8, color='#7c3aed'),
+        line=dict(width=3, shape='hv', color='#f59e0b'), # Amber color
         text=schedule['Period'],
         hovertemplate='Period: %{text}<br>Rate: %{y:.2f}%<extra></extra>'
     ))
@@ -982,7 +952,7 @@ def create_interest_rate_timeline(schedule):
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Inter, sans-serif", color="#374151"),
-        title_font=dict(family="Poppins, sans-serif", size=16, color="#0f766e"),
+        title_font=dict(family="Poppins, sans-serif", size=16, color="#111827"),
         margin=dict(l=20, r=20, t=40, b=20)
     )
     return fig
@@ -1002,21 +972,20 @@ init_session_state()
 
 def main():
     st.set_page_config(
-        page_title="Loan Calculator",
-        page_icon="💰",
+        page_title="Dynamic EMI/EQI Calculator",
+        page_icon=":moneybag:",
         layout="wide",
         initial_sidebar_state="expanded"
     )
     
     load_custom_css()
     
-    st.title("EMI/EQI Schedule")
+    st.title(":moneybag: Loan Repayment Planner")
     
     st.markdown("""
     <div class='info-box'>
-        <p style='margin:0;'>
-        🎯 <strong>Professional EMI/Quarterly Calculator</strong> with <strong>Dynamic Rate Changes</strong>, 
-        BS Calendar Support, and Multiple Export Options
+        <p style='margin:0; font-size: 1.05rem;'>
+        Select your payment frequency below. This calculator supports <strong>rate changes</strong> during the loan tenure.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -1024,27 +993,27 @@ def main():
     col_freq, col_info = st.columns([1, 2])
     
     with col_freq:
-        payment_freq = st.radio("💳 Payment Frequency", ["EMI (Monthly)", "Quarterly"], horizontal=True)
+        payment_freq = st.radio("Payment Frequency", ["EMI (Monthly)", "Quarterly"], horizontal=True)
         
     is_quarterly = (payment_freq == "Quarterly")
     
     with col_info:
         if is_quarterly:
-            st.info("📅 Payments aligned to **BS Quarter Ends** (Ashad, Ashwin, Poush, Chaitra)")
+            st.info(":calendar: Payments aligned to **BS Quarter Ends** (Ashad, Ashwin, Poush, Chaitra).")
         else:
-            st.info("📅 Payments scheduled on the **10th** of each AD month")
+            st.info(":calendar: Payments scheduled on the **10th** of each AD month.")
             
     st.divider()
     
     with st.sidebar:
-        st.header("⚙️ Loan Parameters")
+        st.header(":gear: Loan Parameters")
         st.markdown("---")
         
-        principal = st.number_input("💵 Loan Amount (Rs.)", min_value=10000, max_value=100000000, value=1000000, step=10000)
-        annual_rate = st.number_input("📊 Initial Annual Interest Rate (%)", min_value=0.0, max_value=30.0, value=12.0, step=0.1, format="%.2f")
-        tenure_months = st.number_input("⏱️ Loan Tenure (Months)", min_value=1, max_value=360, value=60, step=1)
+        principal = st.number_input("Loan Amount (Rs.)", min_value=10000, max_value=100000000, value=1000000, step=10000)
+        annual_rate = st.number_input("Initial Annual Interest Rate (%)", min_value=0.0, max_value=30.0, value=12.0, step=0.1, format="%.2f")
+        tenure_months = st.number_input("Loan Tenure (Months)", min_value=1, max_value=360, value=60, step=1)
         
-        st.markdown("### 📆 Start Date")
+        st.markdown("### Start Date")
         date_format = st.radio("Date Format", ["AD", "BS"], horizontal=True)
         
         nepal_today = get_nepal_time()
@@ -1061,82 +1030,73 @@ def main():
             
             try:
                 start_datetime = bs_to_ad(bs_year, bs_month, bs_day)
-                st.caption(f"🔄 AD Equivalent: {start_datetime.strftime('%Y-%m-%d')}")
+                st.caption(f"AD: {start_datetime.strftime('%Y-%m-%d')}")
             except Exception as e:
-                st.error(f"❌ Could not convert BS → AD: {e}")
+                st.error(f"Could not convert BS -> AD: {e}")
                 start_datetime = datetime.now()
                 
         st.markdown("---")
-        st.subheader("📈 Interest Rate Changes")
-        st.caption("Configure floating interest rates during loan tenure")
+        st.subheader(":chart_with_upwards_trend: Interest Rate Changes")
+        st.caption("Adjust for floating interest rates over time.")
         
         template_excel = create_excel_template()
-        st.download_button(
-            label="📥 Download Excel Template",
-            data=template_excel,
-            file_name="rate_changes_template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True
-        )
+        st.download_button(label=":inbox_tray: Download Template", data=template_excel, file_name="rate_changes_template.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
         
-        with st.expander("📂 Upload Excel File", expanded=False):
-            st.info("💡 Upload file with 'Date' and 'Rate' columns")
-            uploaded_file = st.file_uploader(
-                "Choose File",
-                type=['xlsx', 'xls'],
-                key=f"file_uploader_{st.session_state.upload_key}"
-            )
+        with st.expander(":file_folder: Upload Excel", expanded=False):
+            st.info("Template required: 'Date' and 'Rate' columns.")
+            uploaded_file = st.file_uploader("Choose File", type=['xlsx', 'xls'], key=f"file_uploader_{st.session_state.upload_key}")
             
             if uploaded_file is not None:
-                with st.spinner("⚙️ Processing..."):
+                with st.spinner("Processing..."):
                     rate_changes, errors = parse_excel_rate_changes(uploaded_file)
                     
                     if rate_changes:
-                        st.success(f"✅ Found {len(rate_changes)} rate change(s)}}") # Fixed SyntaxError: Escaped literal brace
+                        st.success(f":white_check_mark: Found {len(rate_changes)} changes")
                         col1, col2 = st.columns(2)
                         with col1:
-                            if st.button("✓ Apply", use_container_width=True):
+                             if st.button("Apply", use_container_width=True):
                                 st.session_state.rate_changes = rate_changes
-                                st.session_state.upload_key += 1
-                                st.success("✨ Applied!")
-                                st.rerun()
+                                st.session_state.upload_key += 1 # Reset uploader key to clear file
+                                st.success("Applied!")
+                                st.rerun() # Rerun to update sidebar display
                         with col2:
-                            if st.button("✗ Cancel", use_container_width=True):
-                                st.session_state.upload_key += 1
-                                st.rerun()
+                             if st.button("Cancel", use_container_width=True):
+                                st.session_state.upload_key += 1 # Reset uploader key to clear file
+                                st.rerun() # Rerun to clear the upload area
                     else:
-                        st.error(f"❌ {errors}")
+                        st.error(f":x: {errors}")
                         
-        with st.expander("➕ Add Rate Change Manually"):
-            change_date = st.date_input("Change Date (AD)", value=(nepal_today + timedelta(days=365)))
+        with st.expander(":heavy_plus_sign: Add Manually"):
+            change_date = st.date_input("Date (AD)", value=(nepal_today + timedelta(days=365)))
             change_datetime = datetime.combine(change_date, datetime.min.time())
-            new_rate = st.number_input("New Interest Rate (%)", min_value=0.0, max_value=30.0, value=13.0, step=0.1, format="%.2f")
+            new_rate = st.number_input("New Rate (%)", min_value=0.0, max_value=30.0, value=13.0, step=0.1, format="%.2f")
             
-            if st.button("➕ Add Rate Change", use_container_width=True):
+            if st.button("Add Rate", use_container_width=True):
                 st.session_state.rate_changes.append({'date': change_datetime, 'rate': new_rate})
-                st.success("✅ Rate change added!")
-                st.rerun()
+                st.success("Added!")
+                st.rerun() # Rerun to update sidebar display
                 
         if st.session_state.rate_changes:
-            st.markdown("#### 📋 Scheduled Rate Changes")
+            st.markdown("**Scheduled Changes:**")
             sorted_changes = sorted(st.session_state.rate_changes, key=lambda x: x['date'])
             
             for idx, change in enumerate(sorted_changes):
+                # Find the original index in the session state list to ensure correct deletion
                 orig_idx = st.session_state.rate_changes.index(change)
                 col1, col2 = st.columns([4, 1])
                 with col1:
-                    st.write(f"📅 {change['date'].strftime('%Y-%m-%d')}: **{change['rate']:.2f}%**")
+                    st.write(f":calendar: {change['date'].strftime('%Y-%m-%d')}: **{change['rate']:.2f}%**")
                 with col2:
-                    if st.button("🗑️", key=f"del_{orig_idx}_{idx}"):
+                    if st.button(":x:", key=f"del_{orig_idx}_{idx}"): # Use unique key
                         st.session_state.rate_changes.pop(orig_idx)
-                        st.rerun()
+                        st.rerun() # Rerun to update sidebar display
                         
     action_col1, action_col2, _ = st.columns([1, 1, 3])
     with action_col1:
-        calculate_btn = st.button("🚀 Calculate Schedule", type="primary", use_container_width=True)
+        calculate_btn = st.button(":gear: Calculate Schedule", type="primary", use_container_width=True)
     with action_col2:
         if st.session_state.rate_changes:
-            if st.button("🔄 Reset Rate Changes", use_container_width=True):
+            if st.button(":arrows_counterclockwise: Reset Rates", use_container_width=True):
                 st.session_state.rate_changes = []
                 st.rerun()
                 
@@ -1147,48 +1107,30 @@ def main():
         period_label = "Quarterly" if is_quarterly else "EMI"
         
         try:
-            with st.spinner("⚙️ Calculating your loan schedule..."):
-                # Calculate precise EMI to ensure tenure matches input
-                # This solves the "349 vs 360" months issue while keeping daily interest
-                initial_emi = calculate_precise_emi(
-                    principal, annual_rate, tenure_months, 
-                    start_datetime, is_quarterly
-                )
+            if st.session_state.rate_changes:
+                schedule, emi = apply_multiple_rate_changes(principal, annual_rate, tenure_months, start_datetime, st.session_state.rate_changes, is_quarterly)
+            else:
+                schedule, emi = calculate_emi_schedule(principal, annual_rate, tenure_months, start_datetime, is_quarterly=is_quarterly)[:2]
                 
-                if st.session_state.rate_changes:
-                    schedule, emi = apply_multiple_rate_changes(
-                        principal, annual_rate, tenure_months,
-                        start_datetime, st.session_state.rate_changes, is_quarterly,
-                        fixed_initial_emi=initial_emi
-                    )
-                else:
-                    schedule, emi = calculate_emi_schedule(
-                        principal, annual_rate, tenure_months,
-                        start_datetime, is_quarterly=is_quarterly,
-                        fixed_emi=initial_emi
-                    )[:2]
-                    
             period_count = f"{len(schedule)} {'quarters' if is_quarterly else 'months'}"
             
-            st.success("✅ Calculation completed successfully!")
-            st.markdown("### 📊 Loan Summary")
-            
+            st.markdown("### Loan Summary")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric(f"💰 {period_label}", f"Rs. {emi:,.0f}")
+                st.metric(period_label, f"Rs. {emi:,.2f}")
             with col2:
                 payment_col = period_label
                 total_payment = schedule[payment_col].sum()
-                st.metric("💸 Total Payment", f"Rs. {total_payment:,.0f}")
+                st.metric("Total Payment", f"Rs. {total_payment:,.2f}")
             with col3:
                 total_interest = schedule['Interest'].sum()
-                st.metric("🔥 Total Interest", f"Rs. {total_interest:,.0f}")
+                st.metric("Total Interest", f"Rs. {total_interest:,.2f}")
             with col4:
-                st.metric("⏱️ Actual Tenure", period_count)
+                st.metric("Actual Tenure", period_count)
                 
             st.markdown("---")
             
-            tab1, tab2, tab3 = st.tabs(["📈 Visualizations", "📋 Payment Schedule", "💾 Export Options"])
+            tab1, tab2, tab3 = st.tabs([":bar_chart: Charts", ":clipboard: Schedule", ":page_facing_up: Export"])
             
             with tab1:
                 left, right = st.columns(2)
@@ -1210,15 +1152,15 @@ def main():
                 st.dataframe(schedule, use_container_width=True, height=500)
                 
             with tab3:
-                st.subheader("📥 Download Your Loan Schedule")
+                st.subheader(":inbox_tray: Download Options")
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
                     csv = schedule.to_csv(index=False)
                     st.download_button(
-                        label="📄 Download CSV",
+                        label="Download CSV",
                         data=csv,
-                        file_name=f"loan_schedule_{datetime.now().strftime('%Y%m%d')}.csv",
+                        file_name=f"{period_label.lower()}_schedule_{datetime.now().strftime('%Y%m%d')}.csv",
                         mime="text/csv",
                         use_container_width=True
                     )
@@ -1234,9 +1176,9 @@ def main():
                         summary_df.to_excel(writer, sheet_name='Summary', index=False)
                     excel_buffer.seek(0)
                     st.download_button(
-                        label="📊 Download Excel",
+                        label="Download Excel",
                         data=excel_buffer,
-                        file_name=f"loan_schedule_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                        file_name=f"{period_label.lower()}_schedule_{datetime.now().strftime('%Y%m%d')}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         use_container_width=True
                     )
@@ -1244,17 +1186,17 @@ def main():
                 with col3:
                     pdf_buffer = generate_pdf(schedule, principal, emi, total_payment, total_interest, tenure_months, is_quarterly)
                     st.download_button(
-                        label="📑 Download PDF Report",
+                        label="Download PDF",
                         data=pdf_buffer,
-                        file_name=f"loan_report_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        file_name=f"{period_label.lower()}_report_{datetime.now().strftime('%Y%m%d')}.pdf",
                         mime="application/pdf",
                         use_container_width=True
                     )
                     
         except Exception as e:
-            st.error(f"❌ Error calculating {period_label}: {e}")
+            st.error(f"Error calculating {period_label}: {e}")
             import traceback
-            with st.expander("🔍 Error Details"):
+            with st.expander("Error Details"):
                 st.code(traceback.format_exc())
 
 if __name__ == "__main__":
